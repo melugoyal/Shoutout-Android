@@ -98,6 +98,8 @@ public class MyMapActivity extends Activity {
                 marker.hideInfoWindow();
                 marker.setSnippet(snapshot.child("status").getValue().toString());
                 marker.showInfoWindow();
+                if (snapshot.child("privacy").getValue().toString().equals("NO"))
+                    marker.hideInfoWindow();
             }
 
             @Override
