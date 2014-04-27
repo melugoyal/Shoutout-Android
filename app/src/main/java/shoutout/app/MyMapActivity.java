@@ -1,12 +1,16 @@
 package shoutout.app;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.FragmentTransaction;
 import android.content.Context;
+import android.content.IntentSender;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Camera;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
+import android.location.LocationListener;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -24,6 +28,10 @@ import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesClient;
+import com.google.android.gms.location.LocationClient;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -34,9 +42,11 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.parse.FindCallback;
 import com.parse.ParseException;
+import com.parse.ParseFacebookUtils;
 import com.parse.ParseGeoPoint;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -53,17 +63,45 @@ import java.util.List;
 import java.util.Map;
 
 
-public class MyMapActivity extends Activity {
+public class MyMapActivity extends Activity implements
+        GooglePlayServicesClient.ConnectionCallbacks,
+        GooglePlayServicesClient.OnConnectionFailedListener,
+        com.google.android.gms.location.LocationListener {
     private GoogleMap map;
     private Context context;
     private Map<String, Marker> dict; // Parse user id -> marker
+    private LocationClient mLocationClient;
+    private LocationRequest mLocationRequest;
+    private static final int UPDATE_INTERVAL = 5;
+    private Location mCurrentLocation;
+    private final Firebase refStatus = new Firebase("https://shoutout.firebaseIO.com/status");
+    private final Firebase refLoc = new Firebase("https://shoutout.firebaseIO.com/loc");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_map);
+
+        //link parse user to fb user
+        final ParseUser user = ParseUser.getCurrentUser();
+        if (!ParseFacebookUtils.isLinked(user)) {
+            ParseFacebookUtils.link(user, this, new SaveCallback() {
+                @Override
+                public void done(ParseException ex) {
+                    if (ParseFacebookUtils.isLinked(user)) {
+                        Log.d("shoutout", "linked user");
+                    }
+                }
+            });
+        }
+
         dict = new HashMap<String, Marker>();
         context = this.getApplicationContext();
+        mLocationClient = new LocationClient(this, this, this);
+        mLocationRequest = LocationRequest.create();
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setInterval(UPDATE_INTERVAL);
+        mLocationRequest.setFastestInterval(UPDATE_INTERVAL);
         map = ((MapFragment) getFragmentManager().findFragmentById(R.id.map))
                 .getMap();
 
@@ -82,10 +120,10 @@ public class MyMapActivity extends Activity {
         });
         ParseGeoPoint currloc = ParseUser.getCurrentUser().getParseGeoPoint("geo");
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currloc.getLatitude(), currloc.getLongitude()), 4));
-        // update the user's location on firebase and parse
+
 
         // live-update data location and status information from firebase
-        final Firebase refStatus = new Firebase("https://shoutout.firebaseIO.com/status");
+
         refStatus.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot snapshot, String previousChildName) {
@@ -118,7 +156,7 @@ public class MyMapActivity extends Activity {
             }
         });
 
-        final Firebase refLoc = new Firebase("https://shoutout.firebaseIO.com/loc");
+
         refLoc.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot snapshot, String previousChildName) {
@@ -150,6 +188,91 @@ public class MyMapActivity extends Activity {
 
             }
         });
+    }
+
+    @Override
+    public void onLocationChanged(Location mCurrentLocation) {
+        this.mCurrentLocation = mCurrentLocation;
+        ParseUser.getCurrentUser().put("geo", new ParseGeoPoint(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+        refLoc.child(ParseUser.getCurrentUser().getObjectId()).child("lat").setValue(mCurrentLocation.getLatitude());
+        refLoc.child(ParseUser.getCurrentUser().getObjectId()).child("long").setValue(mCurrentLocation.getLongitude());
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mLocationClient.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        mLocationClient.disconnect();
+        super.onStop();
+    }
+
+    /*
+     * Called by Location Services when the request to connect the
+     * client finishes successfully. At this point, you can
+     * request the current location or start periodic updates
+     */
+    @Override
+    public void onConnected(Bundle dataBundle) {
+        // update the user's location on firebase and parse
+        mCurrentLocation = mLocationClient.getLastLocation();
+        if (mCurrentLocation != null) {
+            ParseUser.getCurrentUser().put("geo", new ParseGeoPoint(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+            refLoc.child(ParseUser.getCurrentUser().getObjectId()).child("lat").setValue(mCurrentLocation.getLatitude());
+            refLoc.child(ParseUser.getCurrentUser().getObjectId()).child("long").setValue(mCurrentLocation.getLongitude());
+        }
+
+    }
+
+    /*
+     * Called by Location Services if the connection to the
+     * location client drops because of an error.
+     */
+    @Override
+    public void onDisconnected() {
+        // Display the connection status
+        Toast.makeText(this, "Disconnected. Please re-connect.",
+                Toast.LENGTH_SHORT).show();
+    }
+    /*
+    * Called by Location Services if the attempt to
+    * Location Services fails.
+    */
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        /*
+         * Google Play services can resolve some errors it detects.
+         * If the error has a resolution, try sending an Intent to
+         * start a Google Play services activity that can resolve
+         * error.
+         */
+        if (connectionResult.hasResolution()) {
+            try {
+                // Start an Activity that tries to resolve the error
+                connectionResult.startResolutionForResult(
+                        this,
+                        1);
+                /*
+                 * Thrown if Google Play services canceled the original
+                 * PendingIntent
+                 */
+            } catch (IntentSender.SendIntentException e) {
+                // Log the error
+                e.printStackTrace();
+            }
+        } else {
+            /*
+             * If no resolution is available, display a dialog to the
+             * user with the error.
+             */
+            AlertDialog alertDialog = new AlertDialog.Builder(MyMapActivity.this).create();
+            alertDialog.setTitle("Error");
+            alertDialog.setMessage(Integer.toString(connectionResult.getErrorCode()));
+            alertDialog.show();
+        }
     }
 
     private void getBMP(final int i, final ParseGeoPoint geoloc, final ParseUser user) {
