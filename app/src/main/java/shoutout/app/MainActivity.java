@@ -30,31 +30,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        final EditText mEdit = (EditText)findViewById(R.id.editText1);
-        final Firebase ref = new Firebase("https://shoutout.firebaseIO.com/");
-        mButton = (Button)findViewById(R.id.button1);
-        mSwitch = (Switch)findViewById(R.id.switch1);
-        mButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                boolean privacy = mSwitch.isChecked();
-                ParseUser.getCurrentUser().put("status", mEdit.getText().toString());
-                ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("status").setValue(mEdit.getText().toString());
-                if (privacy) {
-                    ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("NO");
-                    ParseUser.getCurrentUser().put("visible", false);
-                }
-                else {
-                    ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("YES");
-                    ParseUser.getCurrentUser().put("visible", true);
-                }
-                ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
-                    @Override
-                    public void done(ParseException e) {
-                        startActivity(new Intent(MainActivity.this, MyMapActivity.class));
-                    }
-                });
-            }
-        });
+
 
     }
 

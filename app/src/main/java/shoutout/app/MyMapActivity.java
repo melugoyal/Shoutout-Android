@@ -177,29 +177,32 @@ public class MyMapActivity extends Activity implements
         ParseGeoPoint currloc = ParseUser.getCurrentUser().getParseGeoPoint("geo");
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currloc.getLatitude(), currloc.getLongitude()), 4));
 
-        final ImageButton mButton = (ImageButton)findViewById(R.id.button);
+        final ImageButton mButton = (ImageButton)findViewById(R.id.imagebutton);
         final Button saveButton = (Button)findViewById(R.id.savebutton);
-        final EditText mEdit = (EditText)findViewById(R.id.editText1);
+        final EditText mEdit = (EditText)findViewById(R.id.changeStatus);
         final Switch mSwitch = (Switch)findViewById(R.id.switch1);
+        final int offset = 160;
         mButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 if (!slideUpVisible) {
-                    mButton.getBackground().setAlpha(0xff);
+                    mButton.setBackgroundColor(0xaa0088ff);
                     if (mButton.getPaddingBottom() == 0)
-                        mButton.setPadding(0,0,0,100);
+                        mButton.setPadding(0,0,0,offset);
                     else
-                        mButton.setY(mButton.getY()-100);
-                    saveButton.setY(saveButton.getY() - 100);
-                    mEdit.setY(mEdit.getY() - 100);
-                    mSwitch.setY(mSwitch.getY() - 100);
+                        mButton.setY(mButton.getY()-offset);
+                    saveButton.setVisibility(View.VISIBLE);
+                    mEdit.setVisibility(View.VISIBLE);
+                    mSwitch.setVisibility(View.VISIBLE);
                 }
                 else {
-                    mButton.getBackground().setAlpha(0x55);
-                    mButton.setY(mButton.getY()+100);
-                    saveButton.setY(saveButton.getY()+100);
-                    mEdit.setY(mEdit.getY() + 100);
-                    mSwitch.setY(mSwitch.getY() + 100);
+                    mButton.setBackgroundColor(0x55006666);
+                    mButton.setY(mButton.getY()+offset);
+                    mEdit.setVisibility(View.INVISIBLE);
+                    saveButton.setVisibility(View.INVISIBLE);
+                    mSwitch.setVisibility(View.INVISIBLE);
                 }
+                mEdit.requestFocus();
+                mEdit.setHint(ParseUser.getCurrentUser().getString("status"));
                 slideUpVisible = !slideUpVisible;
             }
         });
@@ -238,8 +241,10 @@ public class MyMapActivity extends Activity implements
                 marker.showInfoWindow();
                 if (snapshot.child("privacy").getValue().toString().equals("NO"))
                     marker.setVisible(false);
-                else if (snapshot.child("privacy").getValue().toString().equals("YES"))
+                else if (snapshot.child("privacy").getValue().toString().equals("YES")) {
                     marker.setVisible(true);
+                    marker.showInfoWindow();
+                }
             }
 
             @Override
