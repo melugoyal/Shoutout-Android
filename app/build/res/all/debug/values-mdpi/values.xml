@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <!-- From: file:/home/melu/Shoutout/app/build/exploded-bundles/ShoutoutLibsFacebookUnspecified.aar/res/values-mdpi/values.xml -->
-    <eat-comment />
-
-    <dimen name="com_facebook_picker_divider_width">1px</dimen>
-
-</resources>
