@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.FragmentTransaction;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,6 +12,7 @@ import android.graphics.Camera;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationListener;
+import android.net.Uri;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -57,8 +59,10 @@ import org.apache.http.impl.client.DefaultHttpClient;
 
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -66,9 +70,10 @@ import java.util.Map;
 public class MyMapActivity extends Activity implements
         GooglePlayServicesClient.ConnectionCallbacks,
         GooglePlayServicesClient.OnConnectionFailedListener,
-        com.google.android.gms.location.LocationListener {
+        com.google.android.gms.location.LocationListener,
+        GoogleMap.OnInfoWindowClickListener,
+        GoogleMap.OnMarkerClickListener {
     private GoogleMap map;
-    private Context context;
     private Map<String, Marker> dict; // Parse user id -> marker
     private LocationClient mLocationClient;
     private LocationRequest mLocationRequest;
@@ -76,6 +81,7 @@ public class MyMapActivity extends Activity implements
     private Location mCurrentLocation;
     private final Firebase refStatus = new Firebase("https://shoutout.firebaseIO.com/status");
     private final Firebase refLoc = new Firebase("https://shoutout.firebaseIO.com/loc");
+    private Marker lastOpen;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,15 +102,16 @@ public class MyMapActivity extends Activity implements
         }
 
         dict = new HashMap<String, Marker>();
-        context = this.getApplicationContext();
         mLocationClient = new LocationClient(this, this, this);
         mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationRequest.setInterval(UPDATE_INTERVAL);
         mLocationRequest.setFastestInterval(UPDATE_INTERVAL);
+
         map = ((MapFragment) getFragmentManager().findFragmentById(R.id.map))
                 .getMap();
-
+        map.setOnInfoWindowClickListener(this);
+        map.setOnMarkerClickListener(this);
         // show the existing Parse data on the map
         ParseQuery<ParseUser> query = ParseUser.getQuery();
         query.whereExists("geo");
@@ -275,6 +282,50 @@ public class MyMapActivity extends Activity implements
         }
     }
 
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        if (marker.getSnippet().toLowerCase().contains("listening to")) {
+            // implement rdio
+        }
+        // open sms intent
+        String userid = "";
+        for (Map.Entry entry : dict.entrySet()) {
+            if (entry.getValue().equals(marker)) {
+                userid = entry.getKey().toString();
+                break;
+            }
+        }
+        ParseQuery<ParseUser> query = ParseUser.getQuery();
+        query.whereEqualTo("objectId", userid);
+        query.findInBackground(new FindCallback<ParseUser>() {
+            public void done(List<ParseUser> objectList, ParseException e) {
+                if (e == null) {
+                    String phone = objectList.get(0).getString("phone");
+                    if (phone == null || phone.isEmpty())
+                        return;
+                    phone = "smsto:" + phone;
+                    Intent sendIntent = new Intent(Intent.ACTION_SENDTO, Uri.parse(phone));
+                    sendIntent.putExtra("exit_on_sent", true);
+                    startActivity(sendIntent);
+                }
+            }
+        });
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        if (lastOpen != null) {
+            lastOpen.hideInfoWindow();
+            if (lastOpen.equals(marker)) {
+                lastOpen = null;
+                return true;
+            }
+        }
+        marker.showInfoWindow();
+        lastOpen = marker;
+        return true;
+    }
+
     private void getBMP(final int i, final ParseGeoPoint geoloc, final ParseUser user) {
         try {
             final Handler handler = new Handler();
@@ -294,6 +345,7 @@ public class MyMapActivity extends Activity implements
                                 Marker newmark = map.addMarker(new MarkerOptions().position(new LatLng(geoloc.getLatitude(), geoloc.getLongitude()))
                                         .title(user.getUsername())
                                         .snippet(user.getString("status"))
+                                        .draggable(true)
                                         .icon(BitmapDescriptorFactory.fromBitmap(mIcon1)));
                                 dict.put(user.getObjectId(), newmark);
                             }
