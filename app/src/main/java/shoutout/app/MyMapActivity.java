@@ -12,6 +12,7 @@ import android.graphics.Camera;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationListener;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
@@ -21,6 +22,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -49,13 +51,20 @@ import com.parse.ParseGeoPoint;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
+import com.rdio.android.api.Rdio;
+import com.rdio.android.api.RdioApiCallback;
+import com.rdio.android.api.RdioListener;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -63,6 +72,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -72,7 +82,8 @@ public class MyMapActivity extends Activity implements
         GooglePlayServicesClient.OnConnectionFailedListener,
         com.google.android.gms.location.LocationListener,
         GoogleMap.OnInfoWindowClickListener,
-        GoogleMap.OnMarkerClickListener {
+        GoogleMap.OnMarkerClickListener,
+        RdioListener {
     private GoogleMap map;
     private Map<String, Marker> dict; // Parse user id -> marker
     private LocationClient mLocationClient;
@@ -82,6 +93,10 @@ public class MyMapActivity extends Activity implements
     private final Firebase refStatus = new Firebase("https://shoutout.firebaseIO.com/status");
     private final Firebase refLoc = new Firebase("https://shoutout.firebaseIO.com/loc");
     private Marker lastOpen;
+    private MediaPlayer player;
+    private String rdioAppKey = "thrhvh2bkpy5devcntw4qat6";
+    private String rdioAppSecret = "Nrzm8K5G4m";
+    private static Rdio rdio;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,7 +115,8 @@ public class MyMapActivity extends Activity implements
                 }
             });
         }
-
+        rdio = new Rdio(rdioAppKey, rdioAppSecret, null, null, this, this);
+        rdio.prepareForPlayback();
         dict = new HashMap<String, Marker>();
         mLocationClient = new LocationClient(this, this, this);
         mLocationRequest = LocationRequest.create();
@@ -128,6 +144,13 @@ public class MyMapActivity extends Activity implements
         ParseGeoPoint currloc = ParseUser.getCurrentUser().getParseGeoPoint("geo");
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currloc.getLatitude(), currloc.getLongitude()), 4));
 
+        Button mButton = (Button)findViewById(R.id.button);
+        mButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                startActivity(new Intent(MyMapActivity.this, MainActivity.class));
+            }
+        });
+
 
         // live-update data location and status information from firebase
 
@@ -144,7 +167,9 @@ public class MyMapActivity extends Activity implements
                 marker.setSnippet(snapshot.child("status").getValue().toString());
                 marker.showInfoWindow();
                 if (snapshot.child("privacy").getValue().toString().equals("NO"))
-                    marker.hideInfoWindow();
+                    marker.setVisible(false);
+                else if (snapshot.child("privacy").getValue().toString().equals("YES"))
+                    marker.setVisible(true);
             }
 
             @Override
@@ -217,6 +242,16 @@ public class MyMapActivity extends Activity implements
         super.onStop();
     }
 
+    @Override
+    public void onDestroy() {
+        rdio.cleanup();
+        if (player != null) {
+            player.reset();
+            player.release();
+            player = null;
+        }
+        super.onDestroy();
+    }
     /*
      * Called by Location Services when the request to connect the
      * client finishes successfully. At this point, you can
@@ -283,9 +318,71 @@ public class MyMapActivity extends Activity implements
     }
 
     @Override
+    public void onRdioAuthorised(String accessToken, String accessTokenSecret) {
+        return;
+    }
+
+    @Override
+    public void onRdioReadyForPlayback() {
+        return;
+    }
+
+    @Override
+    public void onRdioUserPlayingElsewhere() {
+        return;
+    }
+
+    @Override
     public void onInfoWindowClick(Marker marker) {
-        if (marker.getSnippet().toLowerCase().contains("listening to")) {
-            // implement rdio
+        if (marker.getSnippet().toLowerCase().contains("listening to ")) {
+            // play rdio snippet
+            List<NameValuePair> getArgs = new LinkedList<NameValuePair>();
+            getArgs.add(new BasicNameValuePair("query", marker.getSnippet().substring(13)));
+            rdio.apiCall("searchSuggestions", getArgs, new RdioApiCallback() {
+                @Override
+                public void onApiFailure(String s, Exception e) {
+                    // do nothing
+                }
+                @Override
+                public void onApiSuccess(JSONObject jsonObject) {
+                    try {
+                        final JSONArray result = jsonObject.getJSONArray("result");
+
+                        try {
+                            final Handler handler = new Handler();
+                            Thread th = new Thread(new Runnable() {
+                                public void run() {
+                                    try {
+                                        player = rdio.getPlayerForTrack(result.getJSONObject(0).getString("radioKey"), null, true);
+                                        player.prepare();
+                                        player.start();
+                                        handler.post(new Runnable() {
+                                            public void run() {
+                                                // nothing for now
+                                            }
+                                        });
+
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                        handler.post(new Runnable() {
+
+                                            public void run() {
+                                                Log.e("error", "error");
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                            th.start();
+                        } catch (Exception e1) {
+                            e1.printStackTrace();
+                        }
+                    }
+                    catch (Exception e) {
+                        // do nothing
+                    }
+                }
+            });
         }
         // open sms intent
         String userid = "";
@@ -347,6 +444,9 @@ public class MyMapActivity extends Activity implements
                                         .snippet(user.getString("status"))
                                         .draggable(true)
                                         .icon(BitmapDescriptorFactory.fromBitmap(mIcon1)));
+                                if (!user.getBoolean("visible")) {
+                                    newmark.setVisible(false);
+                                }
                                 dict.put(user.getObjectId(), newmark);
                             }
                         });
