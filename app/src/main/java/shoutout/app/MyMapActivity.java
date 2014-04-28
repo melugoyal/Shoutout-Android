@@ -175,7 +175,8 @@ public class MyMapActivity extends Activity implements
             e1.printStackTrace();
         }
         ParseGeoPoint currloc = ParseUser.getCurrentUser().getParseGeoPoint("geo");
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currloc.getLatitude(), currloc.getLongitude()), 4));
+        if (currloc != null)
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currloc.getLatitude(), currloc.getLongitude()), 4));
 
         final ImageButton mButton = (ImageButton)findViewById(R.id.imagebutton);
         final Button saveButton = (Button)findViewById(R.id.savebutton);
