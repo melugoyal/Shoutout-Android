@@ -24,7 +24,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.firebase.client.ChildEventListener;
@@ -97,6 +100,7 @@ public class MyMapActivity extends Activity implements
     private String rdioAppKey = "thrhvh2bkpy5devcntw4qat6";
     private String rdioAppSecret = "Nrzm8K5G4m";
     private static Rdio rdio;
+    private static boolean slideUpVisible = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,6 +132,7 @@ public class MyMapActivity extends Activity implements
                 .getMap();
         map.setOnInfoWindowClickListener(this);
         map.setOnMarkerClickListener(this);
+        map.getUiSettings().setZoomControlsEnabled(false);
         // show the existing Parse data on the map
         ParseQuery<ParseUser> query = ParseUser.getQuery();
         query.whereExists("geo");
@@ -141,13 +146,78 @@ public class MyMapActivity extends Activity implements
                 }
             }
         });
+        // wait for map to show our own marker, then display our status
+        try {
+            final Handler handler = new Handler();
+            Thread th = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        while (!dict.containsKey(ParseUser.getCurrentUser().getObjectId()));
+                        handler.post(new Runnable() {
+                            public void run() {
+                                if (ParseUser.getCurrentUser().getBoolean("visible"))
+                                    dict.get(ParseUser.getCurrentUser().getObjectId()).showInfoWindow();
+                            }
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        handler.post(new Runnable() {
+
+                            public void run() {
+                                Log.e("error", "error");
+                            }
+                        });
+                    }
+                }
+            });
+            th.start();
+        } catch (Exception e1) {
+            e1.printStackTrace();
+        }
         ParseGeoPoint currloc = ParseUser.getCurrentUser().getParseGeoPoint("geo");
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currloc.getLatitude(), currloc.getLongitude()), 4));
 
-        Button mButton = (Button)findViewById(R.id.button);
+        final ImageButton mButton = (ImageButton)findViewById(R.id.button);
+        final Button saveButton = (Button)findViewById(R.id.savebutton);
+        final EditText mEdit = (EditText)findViewById(R.id.editText1);
+        final Switch mSwitch = (Switch)findViewById(R.id.switch1);
         mButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                startActivity(new Intent(MyMapActivity.this, MainActivity.class));
+                if (!slideUpVisible) {
+                    mButton.getBackground().setAlpha(0xff);
+                    if (mButton.getPaddingBottom() == 0)
+                        mButton.setPadding(0,0,0,100);
+                    else
+                        mButton.setY(mButton.getY()-100);
+                    saveButton.setY(saveButton.getY() - 100);
+                    mEdit.setY(mEdit.getY() - 100);
+                    mSwitch.setY(mSwitch.getY() - 100);
+                }
+                else {
+                    mButton.getBackground().setAlpha(0x55);
+                    mButton.setY(mButton.getY()+100);
+                    saveButton.setY(saveButton.getY()+100);
+                    mEdit.setY(mEdit.getY() + 100);
+                    mSwitch.setY(mSwitch.getY() + 100);
+                }
+                slideUpVisible = !slideUpVisible;
+            }
+        });
+        final Firebase ref = new Firebase("https://shoutout.firebaseIO.com/");
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                boolean privacy = mSwitch.isChecked();
+                ParseUser.getCurrentUser().put("status", mEdit.getText().toString());
+                ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("status").setValue(mEdit.getText().toString());
+                if (privacy) {
+                    ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("NO");
+                    ParseUser.getCurrentUser().put("visible", false);
+                }
+                else {
+                    ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("YES");
+                    ParseUser.getCurrentUser().put("visible", true);
+                }
+                mButton.performClick();
             }
         });
 
@@ -442,7 +512,6 @@ public class MyMapActivity extends Activity implements
                                 Marker newmark = map.addMarker(new MarkerOptions().position(new LatLng(geoloc.getLatitude(), geoloc.getLongitude()))
                                         .title(user.getUsername())
                                         .snippet(user.getString("status"))
-                                        .draggable(true)
                                         .icon(BitmapDescriptorFactory.fromBitmap(mIcon1)));
                                 if (!user.getBoolean("visible")) {
                                     newmark.setVisible(false);

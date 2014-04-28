@@ -38,6 +38,7 @@ public class LoginActivity extends Activity {
             public void done(ParseUser user, ParseException err) {
                 if (user == null) {
                     Log.d("MyApp", "Uh oh. The user cancelled the Facebook login.");
+                    Log.d("parserr", err.toString());
                 } else {
                     if (user.isNew())
                         user.put("status", "Just a man and his thoughts");
