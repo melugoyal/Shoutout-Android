@@ -136,7 +136,7 @@ public class MyMapActivity extends Activity implements
         map.setOnInfoWindowClickListener(this);
         map.setOnMarkerClickListener(this);
         map.getUiSettings().setZoomControlsEnabled(false);
-        // show the existing Parse data on the map
+        map.getUiSettings().setRotateGesturesEnabled(false);
 
         // wait for map to show our own marker, then display our status
         try {
@@ -149,6 +149,7 @@ public class MyMapActivity extends Activity implements
                             public void run() {
                                 if (ParseUser.getCurrentUser().getBoolean("visible"))
                                     dict.get(ParseUser.getCurrentUser().getObjectId()).showInfoWindow();
+                                findViewById(R.id.loading).setVisibility(View.INVISIBLE);
                             }
                         });
                     } catch (Exception e) {
@@ -432,13 +433,16 @@ public class MyMapActivity extends Activity implements
                 public void onApiSuccess(JSONObject jsonObject) {
                     try {
                         final JSONArray result = jsonObject.getJSONArray("result");
-
                         try {
                             final Handler handler = new Handler();
                             Thread th = new Thread(new Runnable() {
                                 public void run() {
                                     try {
-                                        player = rdio.getPlayerForTrack(result.getJSONObject(0).getString("key"), null, true);
+                                        for (int i = 0; i < result.length(); i++) {
+                                            player = rdio.getPlayerForTrack(result.getJSONObject(i).getString("key"), null, true);
+                                            if (result.getJSONObject(i).getString("type").equals("t"))
+                                                break;
+                                        }
                                         player.prepare();
 
                                         handler.post(new Runnable() {
