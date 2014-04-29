@@ -137,18 +137,7 @@ public class MyMapActivity extends Activity implements
         map.setOnMarkerClickListener(this);
         map.getUiSettings().setZoomControlsEnabled(false);
         // show the existing Parse data on the map
-        ParseQuery<ParseUser> query = ParseUser.getQuery();
-        query.whereExists("geo");
-        query.findInBackground(new FindCallback<ParseUser>() {
-            public void done(List<ParseUser> objectList, ParseException e) {
-                if (e == null) {
-                    for (int i = 0; i < objectList.size(); i++) {
-                        ParseGeoPoint geoloc = objectList.get(i).getParseGeoPoint("geo");
-                        getBMP(i, geoloc, objectList.get(i));
-                    }
-                }
-            }
-        });
+
         // wait for map to show our own marker, then display our status
         try {
             final Handler handler = new Handler();
@@ -177,10 +166,6 @@ public class MyMapActivity extends Activity implements
         } catch (Exception e1) {
             e1.printStackTrace();
         }
-        ParseGeoPoint currloc = ParseUser.getCurrentUser().getParseGeoPoint("geo");
-        if (currloc != null)
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currloc.getLatitude(), currloc.getLongitude()), 4));
-
         final ImageButton mButton = (ImageButton)findViewById(R.id.imagebutton);
         final EditText mEdit = (EditText)findViewById(R.id.changeStatus);
         final Switch mSwitch = (Switch)findViewById(R.id.switch1);
@@ -197,13 +182,14 @@ public class MyMapActivity extends Activity implements
                     else
                         mButton.setY(mButton.getY() + offset);
                     mEdit.requestFocus();
-                    mEdit.setHint(ParseUser.getCurrentUser().getString("status"));
+                    mEdit.setText(ParseUser.getCurrentUser().getString("status"));
                     mEdit.setVisibility(View.VISIBLE);
                     mSwitch.setVisibility(View.VISIBLE);
                 }
                 else {
                     boolean privacy = mSwitch.isChecked();
                     ParseUser.getCurrentUser().put("status", mEdit.getText().toString());
+                    ParseUser.getCurrentUser().saveInBackground();
                     ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("status").setValue(mEdit.getText().toString());
                     if (privacy) {
                         ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("NO");
@@ -213,6 +199,7 @@ public class MyMapActivity extends Activity implements
                         ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("YES");
                         ParseUser.getCurrentUser().put("visible", true);
                     }
+                    ParseUser.getCurrentUser().saveInBackground();
                     mButton.setBackgroundColor(0x55006666);
                     mButton.setY(mButton.getY()-offset);
                     mEdit.setVisibility(View.INVISIBLE);
@@ -235,6 +222,8 @@ public class MyMapActivity extends Activity implements
             @Override
             public void onChildChanged(DataSnapshot snapshot, String previousChildName) {
                 Marker marker = dict.get(snapshot.getName());
+                if (marker == null)
+                    return;
                 marker.hideInfoWindow();
                 marker.setSnippet(snapshot.child("status").getValue().toString());
                 marker.showInfoWindow();
@@ -302,6 +291,7 @@ public class MyMapActivity extends Activity implements
     public void onLocationChanged(Location mCurrentLocation) {
         this.mCurrentLocation = mCurrentLocation;
         ParseUser.getCurrentUser().put("geo", new ParseGeoPoint(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+        ParseUser.getCurrentUser().saveInBackground();
         refLoc.child(ParseUser.getCurrentUser().getObjectId()).child("lat").setValue(mCurrentLocation.getLatitude());
         refLoc.child(ParseUser.getCurrentUser().getObjectId()).child("long").setValue(mCurrentLocation.getLongitude());
     }
@@ -342,7 +332,26 @@ public class MyMapActivity extends Activity implements
             refLoc.child(ParseUser.getCurrentUser().getObjectId()).child("lat").setValue(mCurrentLocation.getLatitude());
             refLoc.child(ParseUser.getCurrentUser().getObjectId()).child("long").setValue(mCurrentLocation.getLongitude());
         }
-
+        ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                ParseGeoPoint currloc = ParseUser.getCurrentUser().getParseGeoPoint("geo");
+                if (currloc != null)
+                    map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currloc.getLatitude(), currloc.getLongitude()), 4));
+                ParseQuery<ParseUser> query = ParseUser.getQuery();
+                query.whereExists("geo");
+                query.findInBackground(new FindCallback<ParseUser>() {
+                    public void done(List<ParseUser> objectList, ParseException e) {
+                        if (e == null) {
+                            for (int i = 0; i < objectList.size(); i++) {
+                                ParseGeoPoint geoloc = objectList.get(i).getParseGeoPoint("geo");
+                                getBMP(geoloc, objectList.get(i));
+                            }
+                        }
+                    }
+                });
+            }
+        });
     }
 
     /*
@@ -499,8 +508,9 @@ public class MyMapActivity extends Activity implements
         return true;
     }
 
-    private void getBMP(final int i, final ParseGeoPoint geoloc, final ParseUser user) {
+    private void getBMP(final ParseGeoPoint geoloc, final ParseUser user) {
         try {
+            Log.d("username", user.getUsername());
             final Handler handler = new Handler();
             Thread th = new Thread(new Runnable() {
                 public void run() {
@@ -525,18 +535,14 @@ public class MyMapActivity extends Activity implements
                                 dict.put(user.getObjectId(), newmark);
                             }
                         });
-
                     } catch (Exception e) {
                         e.printStackTrace();
                         handler.post(new Runnable() {
-
                             public void run() {
                                 Log.e("error", "error");
                             }
                         });
                     }
-
-
                 }
             });
             th.start();
@@ -547,7 +553,7 @@ public class MyMapActivity extends Activity implements
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        
+
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.my_map, menu);
         return true;

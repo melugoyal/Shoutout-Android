@@ -15,6 +15,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
+import com.facebook.Request;
+import com.facebook.Response;
+import com.facebook.Session;
+import com.facebook.model.GraphUser;
 import com.parse.LogInCallback;
 import com.parse.Parse;
 import com.parse.ParseFacebookUtils;
@@ -31,7 +35,7 @@ public class LoginActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Parse.initialize(this, "S5HVjNqmiwUgiGjMDiJLYh361p5P7Ob3fCOabrJ9", "3GWNcqZ7LJhBtGbbmQfs0ROHKFM5sX6GDT9IWhCk");
-        ParseFacebookUtils.initialize("213646248845245");
+        ParseFacebookUtils.initialize("708013719240954");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ParseUser currentUser = ParseUser.getCurrentUser();
@@ -43,13 +47,34 @@ public class LoginActivity extends Activity {
     private void FBLogin() {
         ParseFacebookUtils.logIn(this, new LogInCallback() {
             @Override
-            public void done(ParseUser user, ParseException err) {
+            public void done(final ParseUser user, ParseException err) {
                 if (user == null) {
                     Log.d("MyApp", "Uh oh. The user cancelled the Facebook login.");
                     Log.d("parserr", err.toString());
                 } else {
-                    if (user.isNew())
+                    if (user.isNew()) {
                         user.put("status", "Just a man and his thoughts");
+                        user.put("visible", true);
+                        Request request = Request.newMeRequest(ParseFacebookUtils.getSession(),
+                                new Request.GraphUserCallback() {
+                                    @Override
+                                    public void onCompleted(GraphUser graphuser, Response response) {
+                                        // If the response is successful
+                                        if (graphuser != null) {
+                                            String facebookId = graphuser.getId();
+                                            String picurl = "https://graph.facebook.com/";
+                                            picurl+=facebookId+="/picture?width=200&height=200";
+                                            user.put("picURL", picurl);
+                                            user.saveInBackground();
+                                        }
+
+                                        if (response.getError() != null) {
+                                            // Handle error
+                                        }
+                                    }
+                                });
+                        request.executeAsync();
+                    }
                     startMapActivity();
                 }
             }
