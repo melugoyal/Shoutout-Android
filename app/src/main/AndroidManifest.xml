@@ -24,10 +24,9 @@
         android:theme="@android:style/Theme.NoTitleBar"
         android:windowSoftInputMode="adjustResize">
 
-
         <activity
             android:name="shoutout.app.LoginActivity"
-            android:label="@string/title_activity_login" >
+            android:label="Shoutout" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
