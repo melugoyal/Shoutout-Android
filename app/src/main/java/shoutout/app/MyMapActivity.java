@@ -429,12 +429,12 @@ public class MyMapActivity extends Activity implements
                             Thread th = new Thread(new Runnable() {
                                 public void run() {
                                     try {
-                                        player = rdio.getPlayerForTrack(result.getJSONObject(0).getString("radioKey"), null, true);
+                                        player = rdio.getPlayerForTrack(result.getJSONObject(0).getString("key"), null, true);
                                         player.prepare();
-                                        player.start();
+
                                         handler.post(new Runnable() {
                                             public void run() {
-                                                // nothing for now
+                                                player.start();
                                             }
                                         });
 
