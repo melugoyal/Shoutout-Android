@@ -22,6 +22,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -101,6 +103,7 @@ public class MyMapActivity extends Activity implements
     private String rdioAppSecret = "Nrzm8K5G4m";
     private static Rdio rdio;
     private static boolean slideUpVisible = false;
+    private static boolean firstTime = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -179,52 +182,47 @@ public class MyMapActivity extends Activity implements
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currloc.getLatitude(), currloc.getLongitude()), 4));
 
         final ImageButton mButton = (ImageButton)findViewById(R.id.imagebutton);
-        final Button saveButton = (Button)findViewById(R.id.savebutton);
         final EditText mEdit = (EditText)findViewById(R.id.changeStatus);
         final Switch mSwitch = (Switch)findViewById(R.id.switch1);
-        final int offset = 160;
+        final Firebase ref = new Firebase("https://shoutout.firebaseIO.com/");
+        final int offset = 350;
         mButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 if (!slideUpVisible) {
                     mButton.setBackgroundColor(0xaa0088ff);
-                    if (mButton.getPaddingBottom() == 0)
-                        mButton.setPadding(0,0,0,offset);
+                    if (!firstTime) {
+                        mButton.setPadding(0,offset,0,0);
+                        firstTime = true;
+                    }
                     else
-                        mButton.setY(mButton.getY()-offset);
-                    saveButton.setVisibility(View.VISIBLE);
+                        mButton.setY(mButton.getY() + offset);
+                    mEdit.requestFocus();
+                    mEdit.setHint(ParseUser.getCurrentUser().getString("status"));
                     mEdit.setVisibility(View.VISIBLE);
                     mSwitch.setVisibility(View.VISIBLE);
                 }
                 else {
+                    boolean privacy = mSwitch.isChecked();
+                    ParseUser.getCurrentUser().put("status", mEdit.getText().toString());
+                    ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("status").setValue(mEdit.getText().toString());
+                    if (privacy) {
+                        ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("NO");
+                        ParseUser.getCurrentUser().put("visible", false);
+                    }
+                    else {
+                        ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("YES");
+                        ParseUser.getCurrentUser().put("visible", true);
+                    }
                     mButton.setBackgroundColor(0x55006666);
-                    mButton.setY(mButton.getY()+offset);
+                    mButton.setY(mButton.getY()-offset);
                     mEdit.setVisibility(View.INVISIBLE);
-                    saveButton.setVisibility(View.INVISIBLE);
                     mSwitch.setVisibility(View.INVISIBLE);
+                    InputMethodManager mgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    mgr.hideSoftInputFromWindow(mEdit.getWindowToken(), 0);
                 }
-                mEdit.requestFocus();
-                mEdit.setHint(ParseUser.getCurrentUser().getString("status"));
                 slideUpVisible = !slideUpVisible;
             }
         });
-        final Firebase ref = new Firebase("https://shoutout.firebaseIO.com/");
-        saveButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                boolean privacy = mSwitch.isChecked();
-                ParseUser.getCurrentUser().put("status", mEdit.getText().toString());
-                ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("status").setValue(mEdit.getText().toString());
-                if (privacy) {
-                    ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("NO");
-                    ParseUser.getCurrentUser().put("visible", false);
-                }
-                else {
-                    ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("YES");
-                    ParseUser.getCurrentUser().put("visible", true);
-                }
-                mButton.performClick();
-            }
-        });
-
 
         // live-update data location and status information from firebase
 
@@ -276,9 +274,11 @@ public class MyMapActivity extends Activity implements
                 Marker marker = dict.get(snapshot.getName());
                 double newlat = Double.parseDouble(snapshot.child("lat").getValue().toString());
                 double newlong = Double.parseDouble(snapshot.child("long").getValue().toString());
-                marker.hideInfoWindow();
-                marker.setPosition(new LatLng(newlat, newlong));
-                marker.showInfoWindow();
+                if (marker != null) {
+                    marker.hideInfoWindow();
+                    marker.setPosition(new LatLng(newlat, newlong));
+                    marker.showInfoWindow();
+                }
             }
 
             @Override
@@ -508,7 +508,7 @@ public class MyMapActivity extends Activity implements
                     InputStream content = null;
                     try {
                         String userpic = user.getString("picURL");
-                        userpic = userpic.substring(0, userpic.indexOf('?'));
+                        //userpic = userpic.substring(0, userpic.indexOf('?'));
                         url = new URL(userpic);
                         content = (InputStream)url.getContent();
                         Drawable d = Drawable.createFromStream(content, "src");
