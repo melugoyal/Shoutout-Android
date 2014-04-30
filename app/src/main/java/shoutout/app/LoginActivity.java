@@ -62,6 +62,7 @@ public class LoginActivity extends Activity {
                                         // If the response is successful
                                         if (graphuser != null) {
                                             String facebookId = graphuser.getId();
+                                            user.put("username", graphuser.getUsername());
                                             String picurl = "https://graph.facebook.com/";
                                             picurl+=facebookId+="/picture?width=200&height=200";
                                             user.put("picURL", picurl);

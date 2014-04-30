@@ -109,6 +109,7 @@ public class MyMapActivity extends Activity implements
     private static double maplat;
     private static double maplong;
     private static boolean firstConnect = true;
+    private static String lastPlayingSong = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,6 +128,8 @@ public class MyMapActivity extends Activity implements
                 }
             });
         }
+        slideUpVisible = false;
+        firstTime = false;
         rdio = new Rdio(rdioAppKey, rdioAppSecret, null, null, this, this);
         rdio.prepareForPlayback();
         dict = new HashMap<String, Marker>();
@@ -150,6 +153,9 @@ public class MyMapActivity extends Activity implements
                 maplong = cameraPosition.target.longitude;
             }
         });
+        final ParseGeoPoint currloc = ParseUser.getCurrentUser().getParseGeoPoint("geo");
+        if (currloc != null)
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currloc.getLatitude(), currloc.getLongitude()), 4));
 
         // wait for map to show our own marker, then display our status
         try {
@@ -160,7 +166,7 @@ public class MyMapActivity extends Activity implements
                         while (!dict.containsKey(ParseUser.getCurrentUser().getObjectId()));
                         handler.post(new Runnable() {
                             public void run() {
-                                if (ParseUser.getCurrentUser().getBoolean("visible"))
+                                if (ParseUser.getCurrentUser().getBoolean("visible") && currloc != null)
                                     dict.get(ParseUser.getCurrentUser().getObjectId()).showInfoWindow();
                                 findViewById(R.id.loading).setVisibility(View.INVISIBLE);
                             }
@@ -314,6 +320,8 @@ public class MyMapActivity extends Activity implements
     protected void onStart() {
         super.onStart();
         mLocationClient.connect();
+        slideUpVisible = false;
+        firstTime = false;
     }
 
     @Override
@@ -458,9 +466,20 @@ public class MyMapActivity extends Activity implements
                                 public void run() {
                                     try {
                                         for (int i = 0; i < result.length(); i++) {
-                                            player = rdio.getPlayerForTrack(result.getJSONObject(i).getString("key"), null, true);
-                                            if (result.getJSONObject(i).getString("type").equals("t"))
+                                            String key = result.getJSONObject(i).getString("key");
+                                            if (player != null && player.isPlaying() && key.equals(lastPlayingSong))
+                                                return;
+                                            else if (player != null && player.isPlaying() && result.getJSONObject(i).getString("type").equals("t")) {
+                                                player.setNextMediaPlayer(rdio.getPlayerForTrack(key, null, true));
+                                                player.prepare();
+                                                lastPlayingSong = key;
+                                                return;
+                                            }
+                                            player = rdio.getPlayerForTrack(key, null, true);
+                                            if (result.getJSONObject(i).getString("type").equals("t")) {
+                                                lastPlayingSong = key;
                                                 break;
+                                            }
                                         }
                                         player.prepare();
 
