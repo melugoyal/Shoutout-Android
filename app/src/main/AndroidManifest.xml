@@ -41,6 +41,7 @@
 
         <activity
             android:name="shoutout.app.MyMapActivity"
+            android:screenOrientation="portrait"
             android:label="@string/title_activity_my_map" >
 
         </activity>

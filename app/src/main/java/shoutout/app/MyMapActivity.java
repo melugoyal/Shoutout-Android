@@ -45,6 +45,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -104,6 +105,10 @@ public class MyMapActivity extends Activity implements
     private static Rdio rdio;
     private static boolean slideUpVisible = false;
     private static boolean firstTime = false;
+    private static float zoomlevel;
+    private static double maplat;
+    private static double maplong;
+    private static boolean firstConnect = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -137,6 +142,14 @@ public class MyMapActivity extends Activity implements
         map.setOnMarkerClickListener(this);
         map.getUiSettings().setZoomControlsEnabled(false);
         map.getUiSettings().setRotateGesturesEnabled(false);
+        map.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
+            @Override
+            public void onCameraChange(CameraPosition cameraPosition) {
+                zoomlevel = cameraPosition.zoom;
+                maplat = cameraPosition.target.latitude;
+                maplong = cameraPosition.target.longitude;
+            }
+        });
 
         // wait for map to show our own marker, then display our status
         try {
@@ -337,8 +350,14 @@ public class MyMapActivity extends Activity implements
             @Override
             public void done(ParseException e) {
                 ParseGeoPoint currloc = ParseUser.getCurrentUser().getParseGeoPoint("geo");
-                if (currloc != null)
-                    map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currloc.getLatitude(), currloc.getLongitude()), 4));
+                if (firstConnect) {
+                    if (currloc != null)
+                        map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currloc.getLatitude(), currloc.getLongitude()), 4));
+                    firstConnect = false;
+                }
+                else {
+                    map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(maplat, maplong), zoomlevel));
+                }
                 ParseQuery<ParseUser> query = ParseUser.getQuery();
                 query.whereExists("geo");
                 query.findInBackground(new FindCallback<ParseUser>() {
@@ -485,7 +504,7 @@ public class MyMapActivity extends Activity implements
         query.whereEqualTo("objectId", userid);
         query.findInBackground(new FindCallback<ParseUser>() {
             public void done(List<ParseUser> objectList, ParseException e) {
-                if (e == null) {
+                if (e == null && objectList.size() > 0) {
                     String phone = objectList.get(0).getString("phone");
                     if (phone == null || phone.isEmpty())
                         return;
