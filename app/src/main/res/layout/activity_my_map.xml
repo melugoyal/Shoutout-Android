@@ -42,7 +42,7 @@
         android:text="Privacy"
         android:id="@+id/switch1"
         android:visibility="invisible"
-        android:layout_below="@+id/changeStatus"
+        android:layout_below="@+id/phoneNumberField"
         android:layout_centerHorizontal="true"/>
 
     <ImageView
@@ -51,6 +51,19 @@
         android:id="@+id/loading"
         android:background="#FF2BCBE0"
         android:src="@drawable/shoutout_logo"/>
+
+    <EditText
+        android:id="@+id/phoneNumberField"
+        android:hint="Phone Number (No dashes or parentheses)"
+        android:inputType="textMultiLine"
+        android:lines="1"
+        android:gravity="top|left"
+        android:ems="10"
+        android:visibility="invisible"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/changeStatus"
+        android:layout_centerHorizontal="true"/>
 
 
 

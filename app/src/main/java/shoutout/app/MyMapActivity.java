@@ -18,6 +18,7 @@ import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -89,6 +90,7 @@ public class MyMapActivity extends Activity implements
         com.google.android.gms.location.LocationListener,
         GoogleMap.OnInfoWindowClickListener,
         GoogleMap.OnMarkerClickListener,
+        MediaPlayer.OnCompletionListener,
         RdioListener {
     private GoogleMap map;
     private Map<String, Marker> dict; // Parse user id -> marker
@@ -110,6 +112,8 @@ public class MyMapActivity extends Activity implements
     private static double maplong;
     private static boolean firstConnect = true;
     private static String lastPlayingSong = "";
+    private static boolean openSMS = false;
+    private static boolean playerPlaying = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,7 +142,6 @@ public class MyMapActivity extends Activity implements
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationRequest.setInterval(UPDATE_INTERVAL);
         mLocationRequest.setFastestInterval(UPDATE_INTERVAL);
-
         map = ((MapFragment) getFragmentManager().findFragmentById(R.id.map))
                 .getMap();
         map.setOnInfoWindowClickListener(this);
@@ -188,9 +191,10 @@ public class MyMapActivity extends Activity implements
         }
         final ImageButton mButton = (ImageButton)findViewById(R.id.imagebutton);
         final EditText mEdit = (EditText)findViewById(R.id.changeStatus);
+        final EditText mEditPhoneNo = (EditText)findViewById(R.id.phoneNumberField);
         final Switch mSwitch = (Switch)findViewById(R.id.switch1);
         final Firebase ref = new Firebase("https://shoutout.firebaseIO.com/");
-        final int offset = 350;
+        final int offset = 400;
         mButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 if (!slideUpVisible) {
@@ -203,12 +207,17 @@ public class MyMapActivity extends Activity implements
                         mButton.setY(mButton.getY() + offset);
                     mEdit.requestFocus();
                     mEdit.setText(ParseUser.getCurrentUser().getString("status"));
+                    String phone;
+                    if ((phone=ParseUser.getCurrentUser().getString("phone")) != null && !phone.isEmpty())
+                        mEditPhoneNo.setText(ParseUser.getCurrentUser().getString("phone"));
+                    mEditPhoneNo.setVisibility(View.VISIBLE);
                     mEdit.setVisibility(View.VISIBLE);
                     mSwitch.setVisibility(View.VISIBLE);
                 }
                 else {
                     boolean privacy = mSwitch.isChecked();
                     ParseUser.getCurrentUser().put("status", mEdit.getText().toString());
+                    ParseUser.getCurrentUser().put("phone", mEditPhoneNo.getText().toString());
                     ParseUser.getCurrentUser().saveInBackground();
                     ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("status").setValue(mEdit.getText().toString());
                     if (privacy) {
@@ -221,8 +230,9 @@ public class MyMapActivity extends Activity implements
                     }
                     ParseUser.getCurrentUser().saveInBackground();
                     mButton.setBackgroundColor(0x55006666);
-                    mButton.setY(mButton.getY()-offset);
+                    mButton.setY(mButton.getY() - offset);
                     mEdit.setVisibility(View.INVISIBLE);
+                    mEditPhoneNo.setVisibility(View.INVISIBLE);
                     mSwitch.setVisibility(View.INVISIBLE);
                     InputMethodManager mgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     mgr.hideSoftInputFromWindow(mEdit.getWindowToken(), 0);
@@ -320,10 +330,16 @@ public class MyMapActivity extends Activity implements
     protected void onStart() {
         super.onStart();
         mLocationClient.connect();
-        slideUpVisible = false;
-        firstTime = false;
+        //slideUpVisible = false;
+        //firstTime = false;
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK)
+            return true;
+        return super.onKeyDown(keyCode, event);
+    }
     @Override
     protected void onStop() {
         mLocationClient.disconnect();
@@ -446,11 +462,18 @@ public class MyMapActivity extends Activity implements
     }
 
     @Override
-    public void onInfoWindowClick(Marker marker) {
+    public void onCompletion(MediaPlayer mp) {
+        playerPlaying = false;
+    }
+
+    @Override
+    public void onInfoWindowClick(final Marker marker) {
         if (marker.getSnippet().toLowerCase().contains("listening to ")) {
             // play rdio snippet
             List<NameValuePair> getArgs = new LinkedList<NameValuePair>();
+
             getArgs.add(new BasicNameValuePair("query", marker.getSnippet().substring(13)));
+            getArgs.add(new BasicNameValuePair("types", "Track"));
             rdio.apiCall("searchSuggestions", getArgs, new RdioApiCallback() {
                 @Override
                 public void onApiFailure(String s, Exception e) {
@@ -467,25 +490,33 @@ public class MyMapActivity extends Activity implements
                                     try {
                                         for (int i = 0; i < result.length(); i++) {
                                             String key = result.getJSONObject(i).getString("key");
-                                            if (player != null && player.isPlaying() && key.equals(lastPlayingSong))
-                                                return;
-                                            else if (player != null && player.isPlaying() && result.getJSONObject(i).getString("type").equals("t")) {
+                                            if (player != null && /*player.isPlaying()*/ playerPlaying && key.equals(lastPlayingSong)) {
+                                                openSMS = true;
+                                                break;
+                                            }
+                                            else if (player != null && /*player.isPlaying()*/ playerPlaying) {
                                                 player.setNextMediaPlayer(rdio.getPlayerForTrack(key, null, true));
                                                 player.prepare();
+                                                Log.d("rdio", lastPlayingSong + " " + key);
                                                 lastPlayingSong = key;
-                                                return;
+                                                openSMS = true;
+                                                break;
                                             }
                                             player = rdio.getPlayerForTrack(key, null, true);
+                                            player.setOnCompletionListener(MyMapActivity.this);
                                             if (result.getJSONObject(i).getString("type").equals("t")) {
+                                                Log.d("rdio last if", lastPlayingSong + " " + key);
                                                 lastPlayingSong = key;
                                                 break;
                                             }
                                         }
-                                        player.prepare();
+                                        if (!openSMS && player != null)
+                                            player.prepare();
 
                                         handler.post(new Runnable() {
                                             public void run() {
-                                                player.start();
+                                                if (!openSMS)
+                                                    player.start();
                                             }
                                         });
 
@@ -511,7 +542,12 @@ public class MyMapActivity extends Activity implements
                 }
             });
         }
-        // open sms intent
+        openSMS = false;
+        openSMSIntent(marker);
+    }
+
+    public void openSMSIntent(Marker marker) {
+        playerPlaying = player == null ? false : player.isPlaying();
         String userid = "";
         for (Map.Entry entry : dict.entrySet()) {
             if (entry.getValue().equals(marker)) {
@@ -525,7 +561,7 @@ public class MyMapActivity extends Activity implements
             public void done(List<ParseUser> objectList, ParseException e) {
                 if (e == null && objectList.size() > 0) {
                     String phone = objectList.get(0).getString("phone");
-                    if (phone == null || phone.isEmpty())
+                    if (phone == null || phone.isEmpty() || phone.length()!=10)
                         return;
                     phone = "smsto:" + phone;
                     Intent sendIntent = new Intent(Intent.ACTION_SENDTO, Uri.parse(phone));
@@ -552,7 +588,6 @@ public class MyMapActivity extends Activity implements
 
     private void getBMP(final ParseGeoPoint geoloc, final ParseUser user) {
         try {
-            Log.d("username", user.getUsername());
             final Handler handler = new Handler();
             Thread th = new Thread(new Runnable() {
                 public void run() {
