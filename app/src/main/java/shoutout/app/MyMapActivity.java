@@ -194,7 +194,7 @@ public class MyMapActivity extends Activity implements
         final EditText mEditPhoneNo = (EditText)findViewById(R.id.phoneNumberField);
         final Switch mSwitch = (Switch)findViewById(R.id.switch1);
         final Firebase ref = new Firebase("https://shoutout.firebaseIO.com/");
-        final int offset = 400;
+        final int offset = 450;
         mButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 if (!slideUpVisible) {
@@ -490,11 +490,11 @@ public class MyMapActivity extends Activity implements
                                     try {
                                         for (int i = 0; i < result.length(); i++) {
                                             String key = result.getJSONObject(i).getString("key");
-                                            if (player != null && /*player.isPlaying()*/ playerPlaying && key.equals(lastPlayingSong)) {
+                                            if (player != null && playerPlaying && key.equals(lastPlayingSong)) {
                                                 openSMS = true;
                                                 break;
                                             }
-                                            else if (player != null && /*player.isPlaying()*/ playerPlaying) {
+                                            else if (player != null && playerPlaying) {
                                                 player.setNextMediaPlayer(rdio.getPlayerForTrack(key, null, true));
                                                 player.prepare();
                                                 Log.d("rdio", lastPlayingSong + " " + key);
@@ -515,8 +515,10 @@ public class MyMapActivity extends Activity implements
 
                                         handler.post(new Runnable() {
                                             public void run() {
-                                                if (!openSMS)
+                                                if (!openSMS) {
                                                     player.start();
+                                                    playerPlaying=true;
+                                                }
                                             }
                                         });
 
