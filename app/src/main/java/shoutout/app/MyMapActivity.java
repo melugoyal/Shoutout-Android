@@ -194,7 +194,7 @@ public class MyMapActivity extends Activity implements
         final EditText mEditPhoneNo = (EditText)findViewById(R.id.phoneNumberField);
         final Switch mSwitch = (Switch)findViewById(R.id.switch1);
         final Firebase ref = new Firebase("https://shoutout.firebaseIO.com/");
-        final int offset = 450;
+        final int offset = 550;
         mButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 if (!slideUpVisible) {
@@ -217,7 +217,7 @@ public class MyMapActivity extends Activity implements
                 else {
                     boolean privacy = mSwitch.isChecked();
                     ParseUser.getCurrentUser().put("status", mEdit.getText().toString());
-                    ParseUser.getCurrentUser().put("phone", mEditPhoneNo.getText().toString());
+                    ParseUser.getCurrentUser().put("phone", mEditPhoneNo.getText().toString().replaceAll("[-/._()]", ""));
                     ParseUser.getCurrentUser().saveInBackground();
                     ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("status").setValue(mEdit.getText().toString());
                     if (privacy) {

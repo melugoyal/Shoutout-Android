@@ -54,9 +54,8 @@
 
     <EditText
         android:id="@+id/phoneNumberField"
-        android:hint="Phone Number (No dashes or parentheses)"
-        android:inputType="textMultiLine"
-        android:lines="1"
+        android:hint="Phone Number"
+        android:inputType="phone"
         android:gravity="top|left"
         android:ems="10"
         android:visibility="invisible"
