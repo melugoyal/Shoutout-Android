@@ -22,6 +22,14 @@
         android:background="#55006666"
         android:clickable="true" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:text="+"
+        android:id="@+id/crosshairs"/>
+
     <EditText
         android:id="@+id/changeStatus"
         android:hint="New status"
@@ -36,34 +44,97 @@
         android:layout_centerHorizontal="true"/>
 
 
-    <Switch
+    <ToggleButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Privacy"
+        android:textOff="Private"
+        android:textOn="Public"
         android:id="@+id/switch1"
         android:visibility="invisible"
-        android:layout_below="@+id/phoneNumberField"
+        android:layout_below="@+id/changeStatus"
         android:layout_centerHorizontal="true"/>
 
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/loading"
-        android:background="#FF2BCBE0"
+        android:background="#FF00A79D"
         android:src="@drawable/shoutout_logo"/>
 
-    <EditText
-        android:id="@+id/phoneNumberField"
-        android:hint="Phone Number"
-        android:inputType="phone"
-        android:gravity="top|left"
-        android:ems="10"
+    <Button
+        android:id="@+id/updateStatusButton"
+        android:text="Update status"
         android:visibility="invisible"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/changeStatus"
+        android:layout_below="@+id/switch1"
         android:layout_centerHorizontal="true"/>
+<!--
+    <ImageButton
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:id="@+id/show_more_button"
+        android:background="@drawable/show_more"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"/>
 
+    <ImageButton
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:id="@+id/query_location_button"
+        android:background="@drawable/query_location"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/show_more_button"/>
 
+    <ImageButton
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:id="@+id/message_button"
+        android:background="@drawable/message"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/query_location_button"/>
+-->
+    <ImageButton
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:id="@+id/update_shout_button"
+        android:background="@drawable/update_shout"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="10dp"
+        android:layout_centerHorizontal="true"/>
+<!--
+    <ImageButton
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:id="@+id/show_search_bar_button"
+        android:background="@drawable/show_search_bar"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/update_shout_button"/>
 
+    <ImageButton
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:id="@+id/settings_button"
+        android:background="@drawable/settings"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/show_search_bar_button"/>
+-->
+    <ImageButton
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:id="@+id/my_location_button"
+        android:background="@drawable/my_location"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="10dp"
+        android:layout_marginRight="10dp" />
+
+<!-- transparent background for the bottom row image buttons (not needed right now)
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="#BBFFFFFF"
+        android:layout_alignParentBottom="true"/>
+-->
 </RelativeLayout>

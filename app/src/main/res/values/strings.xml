@@ -6,5 +6,6 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_login">LoginActivity</string>
     <string name="title_activity_my_map">MyMapActivity</string>
+    <string name="facebook_app_id">708013719240954</string>
 
 </resources>
