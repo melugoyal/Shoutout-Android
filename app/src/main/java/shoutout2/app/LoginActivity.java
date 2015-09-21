@@ -38,7 +38,7 @@ public class LoginActivity extends Activity {
             return;
         }
         FacebookSdk.sdkInitialize(getApplicationContext());
-        Parse.initialize(this, "S5HVjNqmiwUgiGjMDiJLYh361p5P7Ob3fCOabrJ9", "3GWNcqZ7LJhBtGbbmQfs0ROHKFM5sX6GDT9IWhCk");
+        Parse.initialize(this, Keys.PARSE_APP_ID, Keys.PARSE_CLIENT_KEY);
         ParseFacebookUtils.initialize(getApplicationContext());
         setContentView(R.layout.activity_login);
         ParseUser currentUser = ParseUser.getCurrentUser();
@@ -61,7 +61,6 @@ public class LoginActivity extends Activity {
                 } else {
                     Log.d("User", user.toString());
                     Log.d("Username", user.getUsername());
-                    //Log.d("Username", user.getString("picURL"));
                     if (user.isNew()) {
                         user.put("status", "Just a man and his thoughts");
                         user.put("visible", true);
