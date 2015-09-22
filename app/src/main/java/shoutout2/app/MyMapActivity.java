@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
@@ -16,11 +17,14 @@ import android.graphics.Typeface;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Interpolator;
+import android.view.animation.LinearInterpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -39,15 +43,20 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.clustering.ClusterItem;
+import com.google.maps.android.clustering.ClusterManager;
 import com.parse.FindCallback;
+import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
 import com.parse.ParseGeoPoint;
+import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
@@ -82,11 +91,10 @@ public class MyMapActivity extends Activity implements
     private static boolean firstConnect = true;
     private static int picSize = -1;
     private static int picPadding = -1;
-    private static final int BUBBLE_SCALE = 3/4;
+    private static final double BUBBLE_SCALE = 3./4;
     private static String idForActiveMarker = null;
-//    private ClusterManager<Person> clusterManager;
-/*
-todo: implement clustering of markers
+    private ClusterManager<Person> clusterManager;
+
     public class Person implements ClusterItem {
         private final LatLng position;
         private final ParseUser parseUser;
@@ -101,7 +109,7 @@ todo: implement clustering of markers
             return position;
         }
     }
-*/
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -160,7 +168,7 @@ todo: implement clustering of markers
                 return false;
             }
         });
-//        clusterManager = new ClusterManager<>(this, map);
+        clusterManager = new ClusterManager<Person>(this, map);
         map.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
             @Override
             public void onCameraChange(CameraPosition cameraPosition) {
@@ -254,8 +262,9 @@ todo: implement clustering of markers
                     updateStatus.setVisibility(View.VISIBLE);
                 } else {
                     boolean privacy = mSwitch.isChecked();
-                    ParseUser.getCurrentUser().put("status", mEdit.getText().toString());
-                    ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("status").setValue(mEdit.getText().toString());
+                    String status = mEdit.getText().toString();
+                    ParseUser.getCurrentUser().put("status", status);
+                    ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("status").setValue(status);
                     if (privacy) {
                         ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("YES");
                         ParseUser.getCurrentUser().put("visible", true);
@@ -264,6 +273,7 @@ todo: implement clustering of markers
                         ParseUser.getCurrentUser().put("visible", false);
                     }
                     ParseUser.getCurrentUser().saveInBackground();
+                    checkStatusForMessage(status);
                     mButton.setBackgroundColor(0x55006666);
                     mButton.setY(mButton.getY() - offset);
                     mEdit.setVisibility(View.INVISIBLE);
@@ -285,30 +295,57 @@ todo: implement clustering of markers
             }
 
             @Override
-            public void onChildChanged(DataSnapshot snapshot, String previousChildName) {
+            public void onChildChanged(final DataSnapshot snapshot, String previousChildName) {
                 Log.d("FirebaseChildChanged", "change listener firebase");
                 Log.d("FirebaseChildChanged", snapshot.child("status").getValue().toString());
-                String userId = snapshot.getName();
+                final String userId = snapshot.getName();
                 Marker marker = activeMarkers.get(userId);
                 if (marker == null) {
                     return;
                 }
+                Log.d("FirebaseChildChanged", "found marker");
                 ParseQuery<ParseUser> query = ParseUser.getQuery();
                 query.whereEqualTo("objectId", userId);
-                try {
-                    ParseUser user = query.getFirst();
-                    ParseGeoPoint geoPoint = user.getParseGeoPoint("geo");
-                    getActiveMarker(geoPoint, user);
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-                if (snapshot.child("privacy").getValue().toString().equals("NO")) {
-                    hideUserMarkers(userId);
-                }
-                else if (snapshot.child("privacy").getValue().toString().equals("YES")) {
-                    makeMarkerActive(userId);
-                }
+                query.getFirstInBackground(new GetCallback<ParseUser>() {
+                    @Override
+                    public void done(ParseUser parseUser, ParseException e) {
+                        ParseGeoPoint geoPoint = parseUser.getParseGeoPoint("geo");
+                        activeMarkers.remove(userId);
+                        getActiveMarker(geoPoint, parseUser);
+                        // wait for the active marker to be updated
+                        try {
+                            final Handler handler = new Handler();
+                            Thread th = new Thread(new Runnable() {
+                                public void run() {
+                                    try {
+                                        while (!activeMarkers.containsKey(userId));
+                                        handler.post(new Runnable() {
+                                            public void run() {
+                                                if (snapshot.child("privacy").getValue().toString().equals("NO")) {
+                                                    hideUserMarkers(userId);
+                                                }
+                                                else if (snapshot.child("privacy").getValue().toString().equals("YES")) {
+                                                    makeMarkerActive(userId);
+                                                }
+                                            }
+                                        });
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                        handler.post(new Runnable() {
+
+                                            public void run() {
+                                                Log.e("error", "error");
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                            th.start();
+                        } catch (Exception e1) {
+                            e1.printStackTrace();
+                        }
+                    }
+                });
             }
 
             @Override
@@ -336,11 +373,39 @@ todo: implement clustering of markers
 
             @Override
             public void onChildChanged(DataSnapshot snapshot, String previousChildName) {
-                Marker marker = activeMarkers.get(snapshot.getName());
-                double newlat = Double.parseDouble(snapshot.child("lat").getValue().toString());
-                double newlong = Double.parseDouble(snapshot.child("long").getValue().toString());
+                final Marker marker = activeMarkers.get(snapshot.getName());
+                final double newlat = Double.parseDouble(snapshot.child("lat").getValue().toString());
+                final double newlong = Double.parseDouble(snapshot.child("long").getValue().toString());
                 if (marker != null) {
-                    marker.setPosition(new LatLng(newlat, newlong));
+                    final Handler handler = new Handler();
+                    final long start = SystemClock.uptimeMillis();
+                    Projection proj = map.getProjection();
+                    Point startPoint = proj.toScreenLocation(marker.getPosition());
+                    final LatLng startLatLng = proj.fromScreenLocation(startPoint);
+                    final long duration = 500;
+
+                    final Interpolator interpolator = new LinearInterpolator();
+
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            long elapsed = SystemClock.uptimeMillis() - start;
+                            float t = interpolator.getInterpolation((float) elapsed
+                                    / duration);
+                            double lng = t * newlong + (1 - t)
+                                    * startLatLng.longitude;
+                            double lat = t * newlat + (1 - t)
+                                    * startLatLng.latitude;
+                            marker.setPosition(new LatLng(lat, lng));
+
+                            if (t < 1.0) {
+                                // Post again 16ms later.
+                                handler.postDelayed(this, 16);
+                            } else {
+                                marker.setVisible(true);
+                            }
+                        }
+                    });
                 }
             }
 
@@ -359,6 +424,26 @@ todo: implement clustering of markers
 
             }
         });
+    }
+
+    private void checkStatusForMessage(final String status) {
+        for (String word : status.split(" ")) {
+            if (word.startsWith("@")) {
+                String username = word.substring(1);
+                ParseQuery<ParseUser> query = ParseUser.getQuery();
+                query.whereEqualTo("username", username);
+                query.getFirstInBackground(new GetCallback<ParseUser>() {
+                    @Override
+                    public void done(ParseUser parseUser, ParseException e) {
+                        ParseObject message = new ParseObject("Messages");
+                        message.put("from", ParseUser.getCurrentUser());
+                        message.put("to", parseUser);
+                        message.put("message", status);
+                        message.saveInBackground();
+                    }
+                });
+            }
+        }
     }
 
     private void makeMarkerActive(String userId) {
@@ -715,7 +800,7 @@ todo: implement clustering of markers
     }
 
     private Bitmap placePicInBitmap(Bitmap mIcon1, Bitmap background) {
-        final Bitmap iconBackground = Bitmap.createScaledBitmap(background, background.getWidth()*BUBBLE_SCALE, background.getHeight()*BUBBLE_SCALE, false);
+        final Bitmap iconBackground = Bitmap.createScaledBitmap(background, (int)(background.getWidth()*BUBBLE_SCALE), (int)(background.getHeight()*BUBBLE_SCALE), false);
         if (picSize == -1 || picPadding == -1) {
             setPicSizeAndPadding(iconBackground);
         }
