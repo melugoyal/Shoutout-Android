@@ -22,6 +22,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -81,6 +82,7 @@ public class MyMapActivity extends FragmentActivity implements
     private LocationRequest mLocationRequest;
     private static final int UPDATE_INTERVAL = 5;
     private static final int MIN_ZOOM = 3;
+    private final Firebase ref = new Firebase("https://shoutout.firebaseIO.com/");
     private final Firebase refStatus = new Firebase("https://shoutout.firebaseIO.com/status");
     private final Firebase refLoc = new Firebase("https://shoutout.firebaseIO.com/loc");
     private static boolean slideUpVisible = false;
@@ -91,6 +93,12 @@ public class MyMapActivity extends FragmentActivity implements
     private static boolean firstConnect = true;
     private static int picSize = -1;
     private static int picPadding = -1;
+    private static final int SHOUTOUT_SLIDE_OFFSET = 500;
+    private static ToggleButton mSwitch;
+    private static Button updateStatus;
+    private static EditText mEdit;
+    private static ImageButton updateShoutButton;
+    private static ImageButton mButton;
 
     public class Person {
         public final ParseUser parseUser;
@@ -147,7 +155,7 @@ public class MyMapActivity extends FragmentActivity implements
             @Override
             public void onClick(View view) {
                 ParseGeoPoint currLoc = ParseUser.getCurrentUser().getParseGeoPoint("geo");
-                map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currLoc.getLatitude(),currLoc.getLongitude()), zoomlevel));
+                map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currLoc.getLatitude(), currLoc.getLongitude()), zoomlevel));
                 makeMarkerActive(ParseUser.getCurrentUser().getObjectId());
             }
         });
@@ -207,14 +215,11 @@ public class MyMapActivity extends FragmentActivity implements
         } catch (Exception e1) {
             e1.printStackTrace();
         }
-        final ImageButton mButton = (ImageButton) findViewById(R.id.imagebutton);
-        final ImageButton updateShoutButton = (ImageButton) findViewById(R.id.update_shout_button);
-        final EditText mEdit = (EditText) findViewById(R.id.changeStatus);
-        final Button updateStatus = (Button) findViewById(R.id.updateStatusButton);
-        final ToggleButton mSwitch = (ToggleButton) findViewById(R.id.switch1);
-        mSwitch.setChecked(ParseUser.getCurrentUser().getBoolean("visible"));
-        final Firebase ref = new Firebase("https://shoutout.firebaseIO.com/");
-        final int offset = 500;
+        mButton = (ImageButton) findViewById(R.id.imagebutton);
+        updateShoutButton = (ImageButton) findViewById(R.id.update_shout_button);
+        mEdit = (EditText) findViewById(R.id.changeStatus);
+        updateStatus = (Button) findViewById(R.id.updateStatusButton);
+        mSwitch = (ToggleButton) findViewById(R.id.switch1);
 
         updateShoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -230,42 +235,7 @@ public class MyMapActivity extends FragmentActivity implements
         });
         mButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                if (!slideUpVisible) {
-                    mButton.setBackgroundColor(0xaa0088ff);
-                    if (!firstTime) {
-                        mButton.setPadding(0, offset, 0, 0);
-                        firstTime = true;
-                    } else {
-                        mButton.setY(mButton.getY() + offset);
-                    }
-                    mEdit.requestFocus();
-                    mEdit.setText(ParseUser.getCurrentUser().getString("status"));
-                    mEdit.setVisibility(View.VISIBLE);
-                    mSwitch.setVisibility(View.VISIBLE);
-                    updateStatus.setVisibility(View.VISIBLE);
-                } else {
-                    boolean privacy = mSwitch.isChecked();
-                    String status = mEdit.getText().toString();
-                    ParseUser.getCurrentUser().put("status", status);
-                    ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("status").setValue(status);
-                    if (privacy) {
-                        ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("YES");
-                        ParseUser.getCurrentUser().put("visible", true);
-                    } else {
-                        ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("NO");
-                        ParseUser.getCurrentUser().put("visible", false);
-                    }
-                    ParseUser.getCurrentUser().saveInBackground();
-                    checkStatusForMessage(status);
-                    mButton.setBackgroundColor(0x55006666);
-                    mButton.setY(mButton.getY() - offset);
-                    mEdit.setVisibility(View.INVISIBLE);
-                    mSwitch.setVisibility(View.INVISIBLE);
-                    updateStatus.setVisibility(View.INVISIBLE);
-                    InputMethodManager mgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    mgr.hideSoftInputFromWindow(mEdit.getWindowToken(), 0);
-                }
-                slideUpVisible = !slideUpVisible;
+                updateStatus();
             }
         });
 
@@ -279,8 +249,7 @@ public class MyMapActivity extends FragmentActivity implements
 
             @Override
             public void onChildChanged(final DataSnapshot snapshot, String previousChildName) {
-                Log.d("FirebaseChildChanged", "change listener firebase");
-                Log.d("FirebaseChildChanged", snapshot.child("status").getValue().toString());
+                final String status = snapshot.child("status").getValue().toString();
                 final String userId = snapshot.getName();
                 Log.d("FirebaseChildChanged", "found marker");
                 ParseQuery<ParseUser> query = ParseUser.getQuery();
@@ -290,7 +259,7 @@ public class MyMapActivity extends FragmentActivity implements
                     public void done(ParseUser parseUser, ParseException e) {
                         ParseGeoPoint geoPoint = parseUser.getParseGeoPoint("geo");
                         people.get(userId).activeIcon = null;
-                        getActiveMarker(geoPoint, parseUser);
+                        getActiveMarker(geoPoint, parseUser, status);
                         // wait for the active marker to be updated
                         try {
                             final Handler handler = new Handler();
@@ -300,6 +269,7 @@ public class MyMapActivity extends FragmentActivity implements
                                         while (people.get(userId).activeIcon == null);
                                         handler.post(new Runnable() {
                                             public void run() {
+                                                markers.get(userId).setIcon(BitmapDescriptorFactory.fromBitmap(people.get(userId).activeIcon));
                                                 if (snapshot.child("privacy").getValue().toString().equals("NO")) {
                                                     hideUserMarkers(userId);
                                                 }
@@ -377,10 +347,51 @@ public class MyMapActivity extends FragmentActivity implements
         });
     }
 
+    protected void updateStatus(String... statusParam) {
+        mSwitch.setChecked(ParseUser.getCurrentUser().getBoolean("visible"));
+        InputMethodManager mgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (!slideUpVisible) {
+            mButton.setBackgroundColor(0xaa0088ff);
+            if (!firstTime) {
+                mButton.setPadding(0, SHOUTOUT_SLIDE_OFFSET, 0, 0);
+                firstTime = true;
+            } else {
+                mButton.setY(mButton.getY() + SHOUTOUT_SLIDE_OFFSET);
+            }
+            mEdit.setText("");
+            mEdit.append(statusParam.length > 0 ? statusParam[0] : ParseUser.getCurrentUser().getString("status"));
+            mEdit.setVisibility(View.VISIBLE);
+            mEdit.requestFocus();
+            mgr.showSoftInput(mEdit, InputMethodManager.SHOW_IMPLICIT);
+            mSwitch.setVisibility(View.VISIBLE);
+            updateStatus.setVisibility(View.VISIBLE);
+        } else {
+            boolean privacy = mSwitch.isChecked();
+            String status = mEdit.getText().toString();
+            ParseUser.getCurrentUser().put("status", status);
+            ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("status").setValue(status);
+            if (privacy) {
+                ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("YES");
+                ParseUser.getCurrentUser().put("visible", true);
+            } else {
+                ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("NO");
+                ParseUser.getCurrentUser().put("visible", false);
+            }
+            ParseUser.getCurrentUser().saveInBackground();
+            checkStatusForMessage(status);
+            mButton.setBackgroundColor(0x55006666);
+            mButton.setY(mButton.getY() - SHOUTOUT_SLIDE_OFFSET);
+            mEdit.setVisibility(View.INVISIBLE);
+            mSwitch.setVisibility(View.INVISIBLE);
+            updateStatus.setVisibility(View.INVISIBLE);
+            mgr.hideSoftInputFromWindow(mEdit.getWindowToken(), 0);
+        }
+        slideUpVisible = !slideUpVisible;
+    }
+
     private void initMessagesView() {
         final ListView lv = (ListView)findViewById(R.id.messages_list);
-        lv.setVisibility(View.INVISIBLE);
-        ImageButton messageButton = (ImageButton) findViewById(R.id.message_button);
+        final ImageButton messageButton = (ImageButton) findViewById(R.id.message_button);
         messageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -392,7 +403,8 @@ public class MyMapActivity extends FragmentActivity implements
         messageQuery.findInBackground(new FindCallback<ParseObject>() {
             @Override
             public void done(List<ParseObject> messageList, ParseException e) {
-                ArrayAdapter<ParseObject> adapter = new MessageArrayAdapter<ParseObject>(MyMapActivity.this, R.layout.messages_view, R.id.label, messageList, people);
+                messageList.add(0, new ParseObject("Messages")); // dummy parse object for header
+                ArrayAdapter<ParseObject> adapter = new MessageArrayAdapter<ParseObject>(MyMapActivity.this, R.layout.messages_view, R.id.label, messageList, people, messageButton);
                 lv.setAdapter(adapter);
             }
         });
@@ -400,12 +412,18 @@ public class MyMapActivity extends FragmentActivity implements
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 ParseObject item = (ParseObject) lv.getAdapter().getItem(i);
-                Toast.makeText(MyMapActivity.this, item.toString() + " selected", Toast.LENGTH_LONG).show();
+                lv.setVisibility(View.INVISIBLE);
+                try {
+                    updateStatus("@" + item.getParseUser("from").fetchIfNeeded().getUsername() + " ");
+                }
+                catch (ParseException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
 
-    private void checkStatusForMessage(final String status) {
+    private static void checkStatusForMessage(final String status) {
         for (String word : status.split(" ")) {
             if (word.startsWith("@")) {
                 String username = word.substring(1);
