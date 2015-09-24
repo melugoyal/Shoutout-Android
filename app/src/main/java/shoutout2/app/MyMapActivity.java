@@ -1,15 +1,14 @@
 package shoutout2.app;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
@@ -17,40 +16,41 @@ import android.graphics.Typeface;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.SystemClock;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.Interpolator;
-import android.view.animation.LinearInterpolator;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.androidmapsextensions.ClusterOptions;
+import com.androidmapsextensions.ClusterOptionsProvider;
+import com.androidmapsextensions.ClusteringSettings;
+import com.androidmapsextensions.GoogleMap;
+import com.androidmapsextensions.Marker;
+import com.androidmapsextensions.MarkerOptions;
+import com.androidmapsextensions.SupportMapFragment;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesClient;
-import com.google.android.gms.location.LocationClient;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.maps.android.clustering.ClusterItem;
-import com.google.maps.android.clustering.ClusterManager;
 import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.ParseException;
@@ -67,20 +67,20 @@ import java.util.List;
 import java.util.Map;
 
 
-public class MyMapActivity extends Activity implements
-        GooglePlayServicesClient.ConnectionCallbacks,
-        GooglePlayServicesClient.OnConnectionFailedListener,
+public class MyMapActivity extends FragmentActivity implements
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
         com.google.android.gms.location.LocationListener,
         GoogleMap.OnMarkerClickListener,
         GoogleMap.InfoWindowAdapter {
+
     private GoogleMap map;
-    private Map<String, Marker> activeMarkers; // Parse user id -> marker
-    private Map<String, Marker> inactiveMarkers; // Parse user id -> marker
-    private LocationClient mLocationClient;
+    private Map<String, Marker> markers;
+    private Map<String, Person> people;
+    private GoogleApiClient mLocationClient;
     private LocationRequest mLocationRequest;
     private static final int UPDATE_INTERVAL = 5;
     private static final int MIN_ZOOM = 3;
-    private Location mCurrentLocation;
     private final Firebase refStatus = new Firebase("https://shoutout.firebaseIO.com/status");
     private final Firebase refLoc = new Firebase("https://shoutout.firebaseIO.com/loc");
     private static boolean slideUpVisible = false;
@@ -91,22 +91,13 @@ public class MyMapActivity extends Activity implements
     private static boolean firstConnect = true;
     private static int picSize = -1;
     private static int picPadding = -1;
-    private static final double BUBBLE_SCALE = 3./4;
-    private static String idForActiveMarker = null;
-    private ClusterManager<Person> clusterManager;
 
-    public class Person implements ClusterItem {
-        private final LatLng position;
-        private final ParseUser parseUser;
-        private Bitmap icon;
-        private Bitmap activeIcon;
-        public Person(ParseGeoPoint geoloc, ParseUser user) {
-            position = new LatLng(geoloc.getLatitude(),geoloc.getLongitude());
+    public class Person {
+        public final ParseUser parseUser;
+        public Bitmap icon;
+        public Bitmap activeIcon;
+        public Person(ParseUser user) {
             parseUser = user;
-        }
-        @Override
-        public LatLng getPosition() {
-            return position;
         }
     }
 
@@ -129,23 +120,20 @@ public class MyMapActivity extends Activity implements
         }
         slideUpVisible = false;
         firstTime = false;
-        activeMarkers = new HashMap<String, Marker>();
-        inactiveMarkers = new HashMap<String, Marker>();
-        mLocationClient = new LocationClient(this, this, this);
-        mLocationRequest = LocationRequest.create();
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setInterval(UPDATE_INTERVAL);
-        mLocationRequest.setFastestInterval(UPDATE_INTERVAL);
-        map = ((MapFragment) getFragmentManager().findFragmentById(R.id.map))
-                .getMap();
-        final View mapView = findViewById(R.id.map);
-        final View locationButton = ((View) mapView.findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
-        locationButton.setBackgroundColor(Color.TRANSPARENT);
-        locationButton.setAlpha(0.0f); // hide the location button
+        markers = new HashMap<>();
+        people = new HashMap<>();
+        mLocationClient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build();
+        map = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
+                .getExtendedMap();
         map.setOnMarkerClickListener(this);
         map.getUiSettings().setZoomControlsEnabled(false);
         map.getUiSettings().setRotateGesturesEnabled(false);
-        map.setMyLocationEnabled(true);
+        map.getUiSettings().setMapToolbarEnabled(false);
+        map.setMyLocationEnabled(false);
         map.setInfoWindowAdapter(this);
         map.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
@@ -158,17 +146,11 @@ public class MyMapActivity extends Activity implements
         myLocationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                locationButton.callOnClick();
-            }
-        });
-        map.setOnMyLocationButtonClickListener(new GoogleMap.OnMyLocationButtonClickListener() {
-            @Override
-            public boolean onMyLocationButtonClick() {
+                ParseGeoPoint currLoc = ParseUser.getCurrentUser().getParseGeoPoint("geo");
+                map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currLoc.getLatitude(),currLoc.getLongitude()), zoomlevel));
                 makeMarkerActive(ParseUser.getCurrentUser().getObjectId());
-                return false;
             }
         });
-        clusterManager = new ClusterManager<Person>(this, map);
         map.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
             @Override
             public void onCameraChange(CameraPosition cameraPosition) {
@@ -181,32 +163,33 @@ public class MyMapActivity extends Activity implements
                 maplong = cameraPosition.target.longitude;
                 try {
                     makeMarkerActive(findClosestMarker(maplat, maplong));
-//                    clusterManager.onCameraChange(cameraPosition);
                 } catch (Exception e) {
                     Log.d("markerNotFoundError", "couldn't show info for center marker");
                 }
             }
         });
+        map.setClustering(new ClusteringSettings().clusterOptionsProvider(new MapClusteringOptions(getResources())).clusterSize(96.));
 
         final ParseGeoPoint currloc = ParseUser.getCurrentUser().getParseGeoPoint("geo");
         if (currloc != null) {
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currloc.getLatitude(), currloc.getLongitude()), 4));
         }
 
-        // wait for map to show our own marker, then display our status
+        // wait for map to show everyone's markers
         try {
             final Handler handler = new Handler();
             Thread th = new Thread(new Runnable() {
                 public void run() {
                     try {
                         Log.d("PARSEOBJECTID", ParseUser.getCurrentUser().getObjectId());
-                        while (!activeMarkers.containsKey(ParseUser.getCurrentUser().getObjectId()) || !inactiveMarkers.containsKey(ParseUser.getCurrentUser().getObjectId()));
+                        while (!markers.containsKey(ParseUser.getCurrentUser().getObjectId()));
                         handler.post(new Runnable() {
                             public void run() {
                                 if (ParseUser.getCurrentUser().getBoolean("visible") && currloc != null) {
                                     makeMarkerActive(ParseUser.getCurrentUser().getObjectId());
                                 }
                                 findViewById(R.id.loading).setVisibility(View.INVISIBLE);
+                                initMessagesView();
                             }
                         });
                     } catch (Exception e) {
@@ -299,10 +282,6 @@ public class MyMapActivity extends Activity implements
                 Log.d("FirebaseChildChanged", "change listener firebase");
                 Log.d("FirebaseChildChanged", snapshot.child("status").getValue().toString());
                 final String userId = snapshot.getName();
-                Marker marker = activeMarkers.get(userId);
-                if (marker == null) {
-                    return;
-                }
                 Log.d("FirebaseChildChanged", "found marker");
                 ParseQuery<ParseUser> query = ParseUser.getQuery();
                 query.whereEqualTo("objectId", userId);
@@ -310,7 +289,7 @@ public class MyMapActivity extends Activity implements
                     @Override
                     public void done(ParseUser parseUser, ParseException e) {
                         ParseGeoPoint geoPoint = parseUser.getParseGeoPoint("geo");
-                        activeMarkers.remove(userId);
+                        people.get(userId).activeIcon = null;
                         getActiveMarker(geoPoint, parseUser);
                         // wait for the active marker to be updated
                         try {
@@ -318,7 +297,7 @@ public class MyMapActivity extends Activity implements
                             Thread th = new Thread(new Runnable() {
                                 public void run() {
                                     try {
-                                        while (!activeMarkers.containsKey(userId));
+                                        while (people.get(userId).activeIcon == null);
                                         handler.post(new Runnable() {
                                             public void run() {
                                                 if (snapshot.child("privacy").getValue().toString().equals("NO")) {
@@ -373,39 +352,11 @@ public class MyMapActivity extends Activity implements
 
             @Override
             public void onChildChanged(DataSnapshot snapshot, String previousChildName) {
-                final Marker marker = activeMarkers.get(snapshot.getName());
+                final Marker marker = markers.get(snapshot.getName());
                 final double newlat = Double.parseDouble(snapshot.child("lat").getValue().toString());
                 final double newlong = Double.parseDouble(snapshot.child("long").getValue().toString());
                 if (marker != null) {
-                    final Handler handler = new Handler();
-                    final long start = SystemClock.uptimeMillis();
-                    Projection proj = map.getProjection();
-                    Point startPoint = proj.toScreenLocation(marker.getPosition());
-                    final LatLng startLatLng = proj.fromScreenLocation(startPoint);
-                    final long duration = 500;
-
-                    final Interpolator interpolator = new LinearInterpolator();
-
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            long elapsed = SystemClock.uptimeMillis() - start;
-                            float t = interpolator.getInterpolation((float) elapsed
-                                    / duration);
-                            double lng = t * newlong + (1 - t)
-                                    * startLatLng.longitude;
-                            double lat = t * newlat + (1 - t)
-                                    * startLatLng.latitude;
-                            marker.setPosition(new LatLng(lat, lng));
-
-                            if (t < 1.0) {
-                                // Post again 16ms later.
-                                handler.postDelayed(this, 16);
-                            } else {
-                                marker.setVisible(true);
-                            }
-                        }
-                    });
+                    marker.animatePosition(new LatLng(newlat, newlong));
                 }
             }
 
@@ -422,6 +373,34 @@ public class MyMapActivity extends Activity implements
             @Override
             public void onCancelled(FirebaseError err) {
 
+            }
+        });
+    }
+
+    private void initMessagesView() {
+        final ListView lv = (ListView)findViewById(R.id.messages_list);
+        lv.setVisibility(View.INVISIBLE);
+        ImageButton messageButton = (ImageButton) findViewById(R.id.message_button);
+        messageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                lv.setVisibility(lv.getVisibility() == View.VISIBLE ? View.INVISIBLE : View.VISIBLE);
+            }
+        });
+        ParseQuery<ParseObject> messageQuery = new ParseQuery<ParseObject>("Messages");
+        messageQuery.whereEqualTo("to", ParseUser.getCurrentUser());
+        messageQuery.findInBackground(new FindCallback<ParseObject>() {
+            @Override
+            public void done(List<ParseObject> messageList, ParseException e) {
+                ArrayAdapter<ParseObject> adapter = new MessageArrayAdapter<ParseObject>(MyMapActivity.this, R.layout.messages_view, R.id.label, messageList, people);
+                lv.setAdapter(adapter);
+            }
+        });
+        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                ParseObject item = (ParseObject) lv.getAdapter().getItem(i);
+                Toast.makeText(MyMapActivity.this, item.toString() + " selected", Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -446,38 +425,17 @@ public class MyMapActivity extends Activity implements
         }
     }
 
-    private void makeMarkerActive(String userId) {
-        for (Map.Entry<String, Marker> entry : inactiveMarkers.entrySet()) {
-            if (entry.getKey().equals(userId)) {
-                entry.getValue().setVisible(false);
-            }
-            else {
-                entry.getValue().setVisible(true);
-            }
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        if (marker != null) {
+            makeMarkerActive(marker.getTitle());
         }
-        for (Map.Entry<String, Marker> entry : activeMarkers.entrySet()) {
-            if (entry.getKey().equals(userId)) {
-                entry.getValue().setVisible(true);
-                entry.getValue().showInfoWindow();
-            }
-            else {
-                entry.getValue().setVisible(false);
-            }
-        }
-        idForActiveMarker = userId;
-    }
-
-    private void hideUserMarkers(String userId) {
-        inactiveMarkers.get(userId).setVisible(false);
-        activeMarkers.get(userId).setVisible(false);
-        if (idForActiveMarker.equals(userId)) {
-            idForActiveMarker = null;
-        }
+        return true;
     }
 
     @Override
     public View getInfoWindow(Marker marker) {
-        return this.getLayoutInflater().inflate(R.layout.no_info_window, null);
+        return MyMapActivity.this.getLayoutInflater().inflate(R.layout.no_info_window, null);
     }
 
     @Override
@@ -485,9 +443,24 @@ public class MyMapActivity extends Activity implements
         return null;
     }
 
+    private void makeMarkerActive(String userId) {
+        for (Marker marker : markers.values()) {
+            if (marker.getTitle().equals(userId)) {
+                marker.setIcon(BitmapDescriptorFactory.fromBitmap(people.get(userId).activeIcon));
+                marker.showInfoWindow();
+            }
+            else {
+                marker.setIcon(BitmapDescriptorFactory.fromBitmap(people.get(marker.getTitle()).icon));
+            }
+        }
+    }
+
+    private void hideUserMarkers(String userId) {
+        markers.get(userId).setVisible(false);
+    }
+
     @Override
     public void onLocationChanged(Location mCurrentLocation) {
-        this.mCurrentLocation = mCurrentLocation;
         ParseUser.getCurrentUser().put("geo", new ParseGeoPoint(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
         ParseUser.getCurrentUser().saveInBackground();
         refLoc.child(ParseUser.getCurrentUser().getObjectId()).child("lat").setValue(mCurrentLocation.getLatitude());
@@ -521,51 +494,40 @@ public class MyMapActivity extends Activity implements
      */
     @Override
     public void onConnected(Bundle dataBundle) {
-        // update the user's location on firebase and parse
-        mCurrentLocation = mLocationClient.getLastLocation();
-        if (mCurrentLocation != null) {
-            ParseUser.getCurrentUser().put("geo", new ParseGeoPoint(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
-            refLoc.child(ParseUser.getCurrentUser().getObjectId()).child("lat").setValue(mCurrentLocation.getLatitude());
-            refLoc.child(ParseUser.getCurrentUser().getObjectId()).child("long").setValue(mCurrentLocation.getLongitude());
+        mLocationRequest = LocationRequest.create();
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setInterval(UPDATE_INTERVAL);
+        mLocationRequest.setFastestInterval(UPDATE_INTERVAL);
+        LocationServices.FusedLocationApi.requestLocationUpdates(mLocationClient, mLocationRequest, this);
+        map.clear();
+        ParseGeoPoint currloc = ParseUser.getCurrentUser().getParseGeoPoint("geo");
+        if (firstConnect) {
+            if (currloc != null) {
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currloc.getLatitude(), currloc.getLongitude()), 15));
+            }
+            firstConnect = false;
+        } else {
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(maplat, maplong), zoomlevel));
         }
-        ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
-            @Override
-            public void done(ParseException e) {
-                ParseGeoPoint currloc = ParseUser.getCurrentUser().getParseGeoPoint("geo");
-                if (firstConnect) {
-                    if (currloc != null) {
-                        map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currloc.getLatitude(), currloc.getLongitude()), 15));
+        ParseQuery<ParseUser> query = ParseUser.getQuery();
+        query.whereWithinMiles("geo", currloc, 50);
+        query.findInBackground(new FindCallback<ParseUser>() {
+            public void done(List<ParseUser> objectList, ParseException e) {
+                if (e == null) {
+                    for (int i = objectList.size() - 1; i >= 0; i--) {
+                        ParseGeoPoint geoloc = objectList.get(i).getParseGeoPoint("geo");
+                        people.put(objectList.get(i).getObjectId(), new Person(objectList.get(i)));
+                        getActiveMarker(geoloc, objectList.get(i));
+                        getInactiveMarker(geoloc, objectList.get(i));
                     }
-                    firstConnect = false;
-                } else {
-                    map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(maplat, maplong), zoomlevel));
                 }
-                ParseQuery<ParseUser> query = ParseUser.getQuery();
-                query.whereWithinMiles("geo", currloc, 50);
-                query.findInBackground(new FindCallback<ParseUser>() {
-                    public void done(List<ParseUser> objectList, ParseException e) {
-                        if (e == null) {
-                            for (int i = 0; i < objectList.size(); i++) {
-                                ParseGeoPoint geoloc = objectList.get(i).getParseGeoPoint("geo");
-                                getInactiveMarker(geoloc, objectList.get(i));
-                                getActiveMarker(geoloc, objectList.get(i));
-                            }
-                        }
-                    }
-                });
             }
         });
     }
 
-    /*
-     * Called by Location Services if the connection to the
-     * location client drops because of an error.
-     */
     @Override
-    public void onDisconnected() {
-        // Display the connection status
-        Toast.makeText(this, "Disconnected. Please re-connect.",
-                Toast.LENGTH_SHORT).show();
+    public void onConnectionSuspended(int i) {
+        Log.i("google maps", "GoogleApiClient connection has been suspend");
     }
 
     /*
@@ -606,30 +568,17 @@ public class MyMapActivity extends Activity implements
         }
     }
 
-    @Override
-    public boolean onMarkerClick(Marker marker) {
-        for (Map.Entry entry : inactiveMarkers.entrySet()) {
-            if (marker.equals(entry.getValue())) {
-                makeMarkerActive((String)entry.getKey());
-//                clusterManager.onMarkerClick(marker);
-                return true;
-            }
-        }
-        return true;
-    }
-
     private String findClosestMarker(double latitude, double longitude) { // returns the userId for the closest marker
         float minDistance = Float.MAX_VALUE;
         String key = "";
-        for (Map.Entry entry : inactiveMarkers.entrySet()) {
-            Marker marker = (Marker) entry.getValue();
+        for (Marker marker : markers.values()) {
             double markerLat = marker.getPosition().latitude;
             double markerLong = marker.getPosition().longitude;
             float[] results = new float[3];
             Location.distanceBetween(latitude, longitude, markerLat, markerLong, results);
             if (results[0] < minDistance) {
                 minDistance = results[0];
-                key = entry.getKey().toString();
+                key = marker.getTitle();
             }
         }
         return key;
@@ -685,7 +634,7 @@ public class MyMapActivity extends Activity implements
     }
 
     private void getActiveMarker(final ParseGeoPoint geoloc, final ParseUser user, final String... statusParam) {
-        final Bitmap activeBackground = BitmapFactory.decodeResource(getResources(), R.drawable.shout_bubble_active);
+        final Bitmap background = BitmapFactory.decodeResource(getResources(), R.drawable.shout_bubble_active);
         final String userpic = user.getString("picURL");
         final String status = statusParam.length > 0 ? statusParam[0] : user.getString("status");
         String display = user.getString("displayName");
@@ -700,16 +649,20 @@ public class MyMapActivity extends Activity implements
                         url = new URL(userpic);
                         final Bitmap mIcon = BitmapFactory.decodeStream(url.openConnection().getInputStream());
                         final Bitmap mIcon1 = mIcon.copy(Bitmap.Config.ARGB_8888, true);
+                        final Bitmap activeBackground = background.copy(Bitmap.Config.ARGB_8888, true);
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                Bitmap activeIconBackground = placePicInBitmap(mIcon1, activeBackground);
-                                writeTextInBubble(activeIconBackground, status, displayName);
-                                Marker newmark = map.addMarker(new MarkerOptions().position(new LatLng(geoloc.getLatitude(), geoloc.getLongitude()))
-                                        .visible(false)
-                                        .anchor(0.0f, 1.0f)
-                                        .icon(BitmapDescriptorFactory.fromBitmap(activeIconBackground)));
-                                activeMarkers.put(user.getObjectId(), newmark);
+                                placePicInBitmap(mIcon1, activeBackground);
+                                int width = (int) getResources().getDimension(R.dimen.active_bubble_width);
+                                int height = (int) getResources().getDimension(R.dimen.active_bubble_height);
+                                Bitmap markerIcon = Bitmap.createScaledBitmap(activeBackground, width, height, false);
+                                writeTextInBubble(markerIcon, status, displayName);
+//                                Marker newmark = map.addMarker(new MarkerOptions().position(new LatLng(geoloc.getLatitude(), geoloc.getLongitude()))
+//                                        .visible(false)
+//                                        .anchor(0.0f, 1.0f)
+//                                        .icon(BitmapDescriptorFactory.fromBitmap(markerIcon)));
+                                people.get(user.getObjectId()).activeIcon = markerIcon;
                             }
                         });
                     }
@@ -748,21 +701,25 @@ public class MyMapActivity extends Activity implements
         Canvas canvas = new Canvas(activeIconBackground);
         Paint paint = new Paint();
         paint.setColor(Color.BLACK);
-        paint.setTextSize(30);
-        int y = picPadding * 3;
+        paint.setTextSize(getResources().getDimension(R.dimen.status_text_size));
+        int y = (int)(getResources().getDimension(R.dimen.status_text_top_padding));
+        float x = getResources().getDimension(R.dimen.status_text_left_padding);
         paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
-        canvas.drawText(displayName, picSize * 1.2f, y, paint);
+        canvas.drawText(displayName, x, y, paint);
         y += paint.descent() - paint.ascent();
 
         paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.NORMAL));
+        int lineNum = 1;
         for (String line : insertStatusNewlines(status).split("\n")) {
-            canvas.drawText(line, picSize * 1.2f, y, paint);
+            if (lineNum++ > 3) { // only print the first three lines of the status
+                break;
+            }
+            canvas.drawText(line, x, y, paint);
             y += paint.descent() - paint.ascent();
         }
     }
 
     private void getInactiveMarker(final ParseGeoPoint geoloc, final ParseUser user) {
-//        clusterManager.addItem(new Person(geoloc, user));
         try {
             final Handler handler = new Handler();
             Thread th = new Thread(new Runnable() {
@@ -774,16 +731,26 @@ public class MyMapActivity extends Activity implements
                         final Bitmap mIcon = BitmapFactory.decodeStream(url.openConnection().getInputStream());
                         final Bitmap background = BitmapFactory.decodeResource(getResources(), R.drawable.shout_bubble_inactive);
                         final Bitmap mIcon1 = mIcon.copy(Bitmap.Config.ARGB_8888, true);
+                        final Bitmap iconBackground = background.copy(Bitmap.Config.ARGB_8888, true);
                         handler.post(new Runnable() {
                             public void run() {
-                                Bitmap iconBackground = placePicInBitmap(mIcon1, background);
+                                placePicInBitmap(mIcon1, iconBackground);
+                                int width = (int) getResources().getDimension(R.dimen.inactive_bubble_width);
+                                int height = (int) getResources().getDimension(R.dimen.inactive_bubble_height);
+                                Bitmap markerIcon = Bitmap.createScaledBitmap(iconBackground, width, height, false);
                                 Marker newmark = map.addMarker(new MarkerOptions().position(new LatLng(geoloc.getLatitude(), geoloc.getLongitude()))
                                         .anchor(0.0f,1.0f)
-                                        .icon(BitmapDescriptorFactory.fromBitmap(iconBackground)));
+                                        .title(user.getObjectId())
+                                        .icon(BitmapDescriptorFactory.fromBitmap(markerIcon)));
                                 if (!user.getBoolean("visible")) {
                                     newmark.setVisible(false);
                                 }
-                                inactiveMarkers.put(user.getObjectId(), newmark);
+                                people.get(user.getObjectId()).icon = markerIcon;
+
+                                if (!user.getBoolean("visible")) {
+                                    newmark.setVisible(false);
+                                }
+                                markers.put(user.getObjectId(), newmark);
                             }
                         });
                     } catch (Exception e) {
@@ -799,8 +766,7 @@ public class MyMapActivity extends Activity implements
         }
     }
 
-    private Bitmap placePicInBitmap(Bitmap mIcon1, Bitmap background) {
-        final Bitmap iconBackground = Bitmap.createScaledBitmap(background, (int)(background.getWidth()*BUBBLE_SCALE), (int)(background.getHeight()*BUBBLE_SCALE), false);
+    private void placePicInBitmap(Bitmap mIcon1, Bitmap iconBackground) {
         if (picSize == -1 || picPadding == -1) {
             setPicSizeAndPadding(iconBackground);
         }
@@ -813,7 +779,6 @@ public class MyMapActivity extends Activity implements
                 }
             }
         }
-        return iconBackground;
     }
 
     @Override

@@ -24,8 +24,10 @@ repositories {
 
 dependencies {
     compile 'com.android.support:appcompat-v7:+'
-    compile 'com.google.android.gms:play-services:4.3.23'
+//    compile 'com.google.android.gms:play-services:4.3.23'
     compile 'com.google.maps.android:android-maps-utils:+'
+    compile 'com.androidmapsextensions:android-maps-extensions:2.2.0'
+    compile 'com.google.android.gms:play-services:6.5.87'
     // You must install or update the Google Repository through the SDK manager to use this dependency.
     // The Google Repository (separate from the corresponding library) can be found in the Extras category.
     //
