@@ -2,7 +2,6 @@ package shoutout2.app;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -22,19 +21,16 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import com.androidmapsextensions.ClusterOptions;
-import com.androidmapsextensions.ClusterOptionsProvider;
 import com.androidmapsextensions.ClusteringSettings;
 import com.androidmapsextensions.GoogleMap;
 import com.androidmapsextensions.Marker;
@@ -52,6 +48,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.parse.CountCallback;
 import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.ParseException;
@@ -99,6 +96,9 @@ public class MyMapActivity extends FragmentActivity implements
     private static EditText mEdit;
     private static ImageButton updateShoutButton;
     private static ImageButton mButton;
+    private ListView messagesListView;
+    private ImageButton messageButton;
+    private MessageNumCircle messageNumCircle;
 
     public class Person {
         public final ParseUser parseUser;
@@ -183,6 +183,9 @@ public class MyMapActivity extends FragmentActivity implements
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currloc.getLatitude(), currloc.getLongitude()), 4));
         }
 
+        messagesListView = (ListView)findViewById(R.id.messages_list);
+        initMessageButton();
+
         // wait for map to show everyone's markers
         try {
             final Handler handler = new Handler();
@@ -197,7 +200,6 @@ public class MyMapActivity extends FragmentActivity implements
                                     makeMarkerActive(ParseUser.getCurrentUser().getObjectId());
                                 }
                                 findViewById(R.id.loading).setVisibility(View.INVISIBLE);
-                                initMessagesView();
                             }
                         });
                     } catch (Exception e) {
@@ -389,15 +391,35 @@ public class MyMapActivity extends FragmentActivity implements
         slideUpVisible = !slideUpVisible;
     }
 
-    private void initMessagesView() {
-        final ListView lv = (ListView)findViewById(R.id.messages_list);
-        final ImageButton messageButton = (ImageButton) findViewById(R.id.message_button);
+    private void initMessageButton() {
+        messageButton = (ImageButton) findViewById(R.id.message_button);
+        messageNumCircle = new MessageNumCircle(getResources(), (ImageView) findViewById(R.id.red_circle));
         messageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                lv.setVisibility(lv.getVisibility() == View.VISIBLE ? View.INVISIBLE : View.VISIBLE);
+                if (messagesListView.getVisibility() == View.VISIBLE) {
+                    messagesListView.setVisibility(View.INVISIBLE);
+                } else {
+                    initMessagesView();
+                }
             }
         });
+        updateMessageButton();
+    }
+
+    private void updateMessageButton() {
+        final ParseQuery<ParseObject> messageQuery = new ParseQuery<ParseObject>("Messages");
+        messageQuery.whereEqualTo("to", ParseUser.getCurrentUser());
+        messageQuery.whereEqualTo("read", false);
+        messageQuery.countInBackground(new CountCallback() {
+            @Override
+            public void done(int count, ParseException e) {
+                messageNumCircle.setCircle(count);
+            }
+        });
+    }
+
+    private void initMessagesView() {
         ParseQuery<ParseObject> messageQuery = new ParseQuery<ParseObject>("Messages");
         messageQuery.whereEqualTo("to", ParseUser.getCurrentUser());
         messageQuery.findInBackground(new FindCallback<ParseObject>() {
@@ -405,26 +427,32 @@ public class MyMapActivity extends FragmentActivity implements
             public void done(List<ParseObject> messageList, ParseException e) {
                 messageList.add(0, new ParseObject("Messages")); // dummy parse object for header
                 ArrayAdapter<ParseObject> adapter = new MessageArrayAdapter<ParseObject>(MyMapActivity.this, R.layout.messages_view, R.id.label, messageList, people, messageButton);
-                lv.setAdapter(adapter);
+                messagesListView.setAdapter(adapter);
+                messagesListView.setVisibility(View.VISIBLE);
             }
         });
-        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        messagesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                ParseObject item = (ParseObject) lv.getAdapter().getItem(i);
-                lv.setVisibility(View.INVISIBLE);
-                try {
-                    updateStatus("@" + item.getParseUser("from").fetchIfNeeded().getUsername() + " ");
-                }
-                catch (ParseException e) {
-                    e.printStackTrace();
+                if (i != 0) {
+                    ParseObject item = (ParseObject) messagesListView.getAdapter().getItem(i);
+                    try {
+                        updateStatus("@" + item.getParseUser("from").fetchIfNeeded().getUsername() + " ");
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         });
     }
 
+    private void hideMessageListView() {
+        messagesListView.setVisibility(View.INVISIBLE);
+        updateMessageButton();
+    }
+
     private static void checkStatusForMessage(final String status) {
-        for (String word : status.split(" ")) {
+        for (String word : status.split("[^a-zA-Z\\d@]")) { // split on all characters except letters, numbers and @
             if (word.startsWith("@")) {
                 String username = word.substring(1);
                 ParseQuery<ParseUser> query = ParseUser.getQuery();
@@ -435,6 +463,7 @@ public class MyMapActivity extends FragmentActivity implements
                         ParseObject message = new ParseObject("Messages");
                         message.put("from", ParseUser.getCurrentUser());
                         message.put("to", parseUser);
+                        message.put("read", false);
                         message.put("message", status);
                         message.saveInBackground();
                     }
@@ -494,6 +523,7 @@ public class MyMapActivity extends FragmentActivity implements
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
+            hideMessageListView();
             return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -759,6 +789,7 @@ public class MyMapActivity extends FragmentActivity implements
                                 Marker newmark = map.addMarker(new MarkerOptions().position(new LatLng(geoloc.getLatitude(), geoloc.getLongitude()))
                                         .anchor(0.0f,1.0f)
                                         .title(user.getObjectId())
+                                        .draggable(true)
                                         .icon(BitmapDescriptorFactory.fromBitmap(markerIcon)));
                                 if (!user.getBoolean("visible")) {
                                     newmark.setVisible(false);

@@ -43,12 +43,19 @@ public class MessageArrayAdapter<T> extends ArrayAdapter<T> {
                 }
             });
             text.setText("Inbox");
-            text.setTypeface(Typeface.DEFAULT_BOLD);
+            text.setTypeface(null, Typeface.BOLD);
         }
         else {
             ParseObject messageObject = messageObjects.get(position);
             text.setText(messageObject.getString("message"));
-            text.setTypeface(Typeface.DEFAULT);
+            if (!messageObject.getBoolean("read")) {
+                text.setTypeface(null, Typeface.BOLD);
+                messageObject.put("read", true);
+                messageObject.saveInBackground();
+            }
+            else {
+                text.setTypeface(null, Typeface.NORMAL);
+            }
             imageView.setImageBitmap(people.get(messageObject.getParseUser("from").getObjectId()).icon);
         }
         return itemView;

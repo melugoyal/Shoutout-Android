@@ -10,4 +10,6 @@
     <dimen name="inactive_bubble_height">89dp</dimen>
     <dimen name="active_bubble_width">220dp</dimen>
     <dimen name="active_bubble_height">90dp</dimen>
+    <dimen name="message_button_size">40dp</dimen>
+    <dimen name="red_circle_size">20dp</dimen>
     </resources>

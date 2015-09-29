@@ -85,9 +85,21 @@
         android:layout_alignParentBottom="true"
         android:layout_toRightOf="@+id/show_more_button"/>
 -->
+
+    <ImageView
+        android:layout_width="@dimen/red_circle_size"
+        android:layout_height="@dimen/red_circle_size"
+        android:id="@+id/red_circle"
+        android:background="@drawable/redcircle"
+        android:layout_toRightOf="@+id/message_button"
+        android:layout_marginLeft="-10dp"
+        android:layout_above="@+id/message_button"
+        android:layout_marginBottom="-10dp"
+        android:visibility="invisible"/>
+
     <ImageButton
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="@dimen/message_button_size"
+        android:layout_height="@dimen/message_button_size"
         android:id="@+id/message_button"
         android:background="@drawable/message"
         android:layout_alignParentBottom="true"
