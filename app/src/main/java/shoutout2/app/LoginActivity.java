@@ -9,6 +9,10 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -16,12 +20,15 @@ import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.HttpMethod;
+import com.parse.CountCallback;
 import com.parse.LogInCallback;
 import com.parse.Parse;
 import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
+import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
+import com.parse.SignUpCallback;
 
 import org.json.JSONObject;
 
@@ -31,21 +38,92 @@ import java.util.List;
 
 public class LoginActivity extends Activity {
 
+    private EditText usernameField;
+    private EditText passwordField;
+    private EditText emailField;
+    private Button signinButton;
+    private TextView enterEmailRequest;
+    private Button signupButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (!checkLocationServices()) {
             return;
         }
-        FacebookSdk.sdkInitialize(getApplicationContext());
+
         Parse.initialize(this, Keys.PARSE_APP_ID, Keys.PARSE_CLIENT_KEY);
-        ParseFacebookUtils.initialize(getApplicationContext());
-        setContentView(R.layout.activity_login);
         ParseUser currentUser = ParseUser.getCurrentUser();
-        if (currentUser != null && ParseFacebookUtils.isLinked(currentUser)) {
+        if (currentUser != null) {
             startMapActivity();
+            return;
         }
-        FBLogin();
+
+        setContentView(R.layout.activity_login);
+        usernameField = (EditText) findViewById(R.id.username);
+        passwordField = (EditText) findViewById(R.id.password);
+        emailField = (EditText) findViewById(R.id.email);
+        signinButton = (Button) findViewById(R.id.signin_button);
+        enterEmailRequest = (TextView) findViewById(R.id.enter_email_request);
+        signupButton = (Button) findViewById(R.id.signup_button);
+
+        signinButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final String username = usernameField.getText().toString();
+                final String password = passwordField.getText().toString();
+                ParseQuery<ParseUser> newUserQuery = ParseUser.getQuery();
+                newUserQuery.whereEqualTo("username", username);
+                newUserQuery.countInBackground(new CountCallback() {
+                    @Override
+                    public void done(int i, ParseException e) {
+                        if (i == 0) { // user doesn't exist
+                            signup(username, password);
+                        } else {
+                            login(username, password);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    private void login(String username, String password) {
+        ParseUser.logInInBackground(username, password, new LogInCallback() {
+            @Override
+            public void done(ParseUser parseUser, ParseException e) {
+                if (parseUser != null) {
+                    startMapActivity();
+                } else {
+                    Log.e("Login Error", e.getLocalizedMessage());
+                }
+            }
+        });
+    }
+
+    private void signup(final String username, final String password) {
+        enterEmailRequest.setVisibility(View.VISIBLE);
+        emailField.setVisibility(View.VISIBLE);
+        signupButton.setVisibility(View.VISIBLE);
+
+        signupButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ParseUser currentUser = new ParseUser();
+                currentUser.setUsername(username);
+                currentUser.setPassword(password);
+                currentUser.put("displayName", username);
+                currentUser.put("status", "");
+                currentUser.put("visible", true);
+                currentUser.signUpInBackground(new SignUpCallback() {
+                    @Override
+                    public void done(ParseException e) {
+                        // TODO: ONBOARD
+                        startMapActivity();
+                    }
+                });
+            }
+        });
     }
 
     private void FBLogin() {
@@ -93,6 +171,18 @@ public class LoginActivity extends Activity {
                     user.saveInBackground(new SaveCallback() {
                         @Override
                         public void done(ParseException e) {
+                            //link parse user to fb user
+                            final ParseUser user = ParseUser.getCurrentUser();
+                            if (!ParseFacebookUtils.isLinked(user)) {
+                                ParseFacebookUtils.linkWithReadPermissionsInBackground(user, LoginActivity.this, null, new SaveCallback() {
+                                    @Override
+                                    public void done(ParseException ex) {
+                                        if (ParseFacebookUtils.isLinked(user)) {
+                                            Log.d("shoutout", "linked user");
+                                        }
+                                    }
+                                });
+                            }
                             startMapActivity();
                         }
                     });

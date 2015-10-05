@@ -25,10 +25,13 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.ToggleButton;
 
 import com.androidmapsextensions.ClusteringSettings;
@@ -77,20 +80,20 @@ public class MyMapActivity extends FragmentActivity implements
     private Map<String, Person> people;
     private GoogleApiClient mLocationClient;
     private LocationRequest mLocationRequest;
-    private static final int UPDATE_INTERVAL = 5;
+    private static final int UPDATE_INTERVAL = 5000; // milliseconds
     private static final int MIN_ZOOM = 3;
     private final Firebase ref = new Firebase("https://shoutout.firebaseIO.com/");
     private final Firebase refStatus = new Firebase("https://shoutout.firebaseIO.com/status");
     private final Firebase refLoc = new Firebase("https://shoutout.firebaseIO.com/loc");
+    private final Firebase refPrivacy = new Firebase("https://shoutout.firebaseIO.com/privacy");
+    private final Firebase refOnline = new Firebase("https://shoutout.firebaseIO.com/online");
     private static boolean slideUpVisible = false;
     private static boolean firstTime = false;
     private static float zoomlevel;
     private static double maplat;
     private static double maplong;
     private static boolean firstConnect = true;
-    private static int picSize = -1;
-    private static int picPadding = -1;
-    private static final int SHOUTOUT_SLIDE_OFFSET = 500;
+    private int SHOUTOUT_SLIDE_OFFSET;
     private static ToggleButton mSwitch;
     private static Button updateStatus;
     private static EditText mEdit;
@@ -98,34 +101,14 @@ public class MyMapActivity extends FragmentActivity implements
     private static ImageButton mButton;
     private ListView messagesListView;
     private ImageButton messageButton;
+    private LinearLayout settingsView;
     private MessageNumCircle messageNumCircle;
-
-    public class Person {
-        public final ParseUser parseUser;
-        public Bitmap icon;
-        public Bitmap activeIcon;
-        public Person(ParseUser user) {
-            parseUser = user;
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_map);
 
-        //link parse user to fb user
-        final ParseUser user = ParseUser.getCurrentUser();
-        if (!ParseFacebookUtils.isLinked(user)) {
-            ParseFacebookUtils.linkWithReadPermissionsInBackground(user, this, null, new SaveCallback() {
-                @Override
-                public void done(ParseException ex) {
-                    if (ParseFacebookUtils.isLinked(user)) {
-                        Log.d("shoutout", "linked user");
-                    }
-                }
-            });
-        }
         slideUpVisible = false;
         firstTime = false;
         markers = new HashMap<>();
@@ -186,6 +169,8 @@ public class MyMapActivity extends FragmentActivity implements
         messagesListView = (ListView)findViewById(R.id.messages_list);
         initMessageButton();
 
+        settingsView = (LinearLayout) findViewById(R.id.settings_list);
+
         // wait for map to show everyone's markers
         try {
             final Handler handler = new Handler();
@@ -200,6 +185,7 @@ public class MyMapActivity extends FragmentActivity implements
                                     makeMarkerActive(ParseUser.getCurrentUser().getObjectId());
                                 }
                                 findViewById(R.id.loading).setVisibility(View.INVISIBLE);
+                                findViewById(R.id.gradient).setVisibility(View.VISIBLE);
                             }
                         });
                     } catch (Exception e) {
@@ -241,6 +227,14 @@ public class MyMapActivity extends FragmentActivity implements
             }
         });
 
+        initFirebaseRefs();
+    }
+
+    public void cancelShout(View v) {
+        slideShoutoutSlideUp();
+    }
+
+    private void initFirebaseRefs() {
         // live-update data location and status information from firebase
 
         refStatus.addChildEventListener(new ChildEventListener() {
@@ -268,16 +262,11 @@ public class MyMapActivity extends FragmentActivity implements
                             Thread th = new Thread(new Runnable() {
                                 public void run() {
                                     try {
-                                        while (people.get(userId).activeIcon == null);
+                                        while (people.get(userId).activeIcon == null) ;
                                         handler.post(new Runnable() {
                                             public void run() {
                                                 markers.get(userId).setIcon(BitmapDescriptorFactory.fromBitmap(people.get(userId).activeIcon));
-                                                if (snapshot.child("privacy").getValue().toString().equals("NO")) {
-                                                    hideUserMarkers(userId);
-                                                }
-                                                else if (snapshot.child("privacy").getValue().toString().equals("YES")) {
-                                                    makeMarkerActive(userId);
-                                                }
+                                                makeMarkerActive(userId);
                                             }
                                         });
                                     } catch (Exception e) {
@@ -347,11 +336,93 @@ public class MyMapActivity extends FragmentActivity implements
 
             }
         });
+
+        refPrivacy.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot snapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot snapshot, String s) {
+                String userId = snapshot.getName();
+                if (snapshot.child("privacy").getValue().toString().equals("NO")) {
+                    hideUserMarkers(userId);
+                } else if (snapshot.child("privacy").getValue().toString().equals("YES")) {
+                    makeMarkerActive(userId);
+                }
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot snapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot snapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        refOnline.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                String userId = dataSnapshot.getName();
+                if (dataSnapshot.getValue().toString().equals("YES")) {
+                    changeMarkerOnlineStatus(userId, true);
+                } else {
+                    changeMarkerOnlineStatus(userId, false);
+                }
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+    }
+
+    public void initSettingsView(View view) {
+        findViewById(R.id.settings_list).setVisibility(View.VISIBLE);
+        mSwitch.setChecked(ParseUser.getCurrentUser().getBoolean("visible"));
+        mSwitch.setVisibility(View.VISIBLE);
+        mSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean privacy) {
+                if (privacy) {
+                    ref.child("privacy").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("YES");
+                    ParseUser.getCurrentUser().put("visible", true);
+                } else {
+                    ref.child("privacy").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("NO");
+                    ParseUser.getCurrentUser().put("visible", false);
+                }
+            }
+        });
     }
 
     protected void updateStatus(String... statusParam) {
-        mSwitch.setChecked(ParseUser.getCurrentUser().getBoolean("visible"));
         InputMethodManager mgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        SHOUTOUT_SLIDE_OFFSET = (int) getResources().getDimension(R.dimen.shoutout_slide_offset);
         if (!slideUpVisible) {
             mButton.setBackgroundColor(0xaa0088ff);
             if (!firstTime) {
@@ -365,30 +436,26 @@ public class MyMapActivity extends FragmentActivity implements
             mEdit.setVisibility(View.VISIBLE);
             mEdit.requestFocus();
             mgr.showSoftInput(mEdit, InputMethodManager.SHOW_IMPLICIT);
-            mSwitch.setVisibility(View.VISIBLE);
             updateStatus.setVisibility(View.VISIBLE);
+            slideUpVisible = true;
         } else {
-            boolean privacy = mSwitch.isChecked();
             String status = mEdit.getText().toString();
             ParseUser.getCurrentUser().put("status", status);
             ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("status").setValue(status);
-            if (privacy) {
-                ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("YES");
-                ParseUser.getCurrentUser().put("visible", true);
-            } else {
-                ref.child("status").child(ParseUser.getCurrentUser().getObjectId()).child("privacy").setValue("NO");
-                ParseUser.getCurrentUser().put("visible", false);
-            }
             ParseUser.getCurrentUser().saveInBackground();
             checkStatusForMessage(status);
-            mButton.setBackgroundColor(0x55006666);
-            mButton.setY(mButton.getY() - SHOUTOUT_SLIDE_OFFSET);
-            mEdit.setVisibility(View.INVISIBLE);
-            mSwitch.setVisibility(View.INVISIBLE);
-            updateStatus.setVisibility(View.INVISIBLE);
-            mgr.hideSoftInputFromWindow(mEdit.getWindowToken(), 0);
+            slideShoutoutSlideUp();
         }
-        slideUpVisible = !slideUpVisible;
+    }
+
+    private void slideShoutoutSlideUp() {
+        InputMethodManager mgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        mButton.setBackgroundColor(0x55006666);
+        mButton.setY(mButton.getY() - SHOUTOUT_SLIDE_OFFSET);
+        mEdit.setVisibility(View.INVISIBLE);
+        updateStatus.setVisibility(View.INVISIBLE);
+        mgr.hideSoftInputFromWindow(mEdit.getWindowToken(), 0);
+        slideUpVisible = false;
     }
 
     private void initMessageButton() {
@@ -426,7 +493,7 @@ public class MyMapActivity extends FragmentActivity implements
             @Override
             public void done(List<ParseObject> messageList, ParseException e) {
                 messageList.add(0, new ParseObject("Messages")); // dummy parse object for header
-                ArrayAdapter<ParseObject> adapter = new MessageArrayAdapter<ParseObject>(MyMapActivity.this, R.layout.messages_view, R.id.label, messageList, people, messageButton);
+                ArrayAdapter<ParseObject> adapter = new MessageArrayAdapter<ParseObject>(MyMapActivity.this, R.layout.messages_view, R.id.label, messageList, people, messageButton, getResources());
                 messagesListView.setAdapter(adapter);
                 messagesListView.setVisibility(View.VISIBLE);
             }
@@ -442,6 +509,7 @@ public class MyMapActivity extends FragmentActivity implements
                         e.printStackTrace();
                     }
                 }
+                hideMessageListView();
             }
         });
     }
@@ -518,12 +586,17 @@ public class MyMapActivity extends FragmentActivity implements
     protected void onStart() {
         super.onStart();
         mLocationClient.connect();
+        ref.child("online").child(ParseUser.getCurrentUser().getObjectId()).setValue("YES");
     }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            hideMessageListView();
+            if (messagesListView.getVisibility() == View.VISIBLE) {
+                hideMessageListView();
+            } else if (settingsView.getVisibility() == View.VISIBLE) {
+                settingsView.setVisibility(View.INVISIBLE);
+            }
             return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -532,6 +605,7 @@ public class MyMapActivity extends FragmentActivity implements
     @Override
     protected void onStop() {
         mLocationClient.disconnect();
+        ref.child("online").child(ParseUser.getCurrentUser().getObjectId()).setValue("NO");
         super.onStop();
     }
 
@@ -632,35 +706,6 @@ public class MyMapActivity extends FragmentActivity implements
         return key;
     }
 
-    // read the background image file to determine where to position the profile picture and the status text
-    private void setPicSizeAndPadding(Bitmap background) {
-        int firstColor = background.getPixel(0, 0);
-        int yCenter = 0;
-        for(int i = 0; i < background.getHeight(); i++) {
-            if (background.getPixel(0,i) == firstColor) {
-                continue;
-            }
-            int firstBlue = Color.blue(background.getPixel(0,i));
-            for (int j = 0; j < background.getWidth(); j++) {
-                if (Color.blue(background.getPixel(j,i)) == firstBlue) {
-                    continue;
-                }
-                yCenter = i;
-                picPadding = j;
-                break;
-            }
-            break;
-        }
-        firstColor = background.getPixel(picPadding, yCenter);
-        for (int i = picPadding+1; i < background.getWidth(); i++) {
-            if (background.getPixel(i, yCenter) == firstColor) {
-                continue;
-            }
-            picSize = i - picPadding;
-            break;
-        }
-    }
-
     private Bitmap getCroppedBitmap(Bitmap sbmp) {
         Bitmap output = Bitmap.createBitmap(sbmp.getWidth(),
                 sbmp.getHeight(), Bitmap.Config.ARGB_8888);
@@ -681,6 +726,27 @@ public class MyMapActivity extends FragmentActivity implements
         return output;
     }
 
+    private void changeMarkerOnlineStatus(String userId, boolean online) {
+        Paint paint = new Paint();
+        if (online) {
+            paint.setColor(Color.GREEN);
+        } else {
+            paint.setColor(Color.parseColor("#2ECEFE"));
+        }
+        Canvas canvas;
+        for (int i = 0; i < 2; i++) {
+            if (i == 0) {
+                canvas = new Canvas(people.get(userId).activeIcon);
+            } else {
+                canvas = new Canvas(people.get(userId).icon);
+            }
+            canvas.drawCircle(getResources().getDimension(R.dimen.online_icon_x_center), getResources().getDimension(R.dimen.online_icon_y_center), (int) getResources().getDimension(R.dimen.online_icon_size), paint);
+        }
+        if (online) {
+            makeMarkerActive(userId);
+        }
+    }
+
     private void getActiveMarker(final ParseGeoPoint geoloc, final ParseUser user, final String... statusParam) {
         final Bitmap background = BitmapFactory.decodeResource(getResources(), R.drawable.shout_bubble_active);
         final String userpic = user.getString("picURL");
@@ -697,14 +763,13 @@ public class MyMapActivity extends FragmentActivity implements
                         url = new URL(userpic);
                         final Bitmap mIcon = BitmapFactory.decodeStream(url.openConnection().getInputStream());
                         final Bitmap mIcon1 = mIcon.copy(Bitmap.Config.ARGB_8888, true);
-                        final Bitmap activeBackground = background.copy(Bitmap.Config.ARGB_8888, true);
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                placePicInBitmap(mIcon1, activeBackground);
                                 int width = (int) getResources().getDimension(R.dimen.active_bubble_width);
                                 int height = (int) getResources().getDimension(R.dimen.active_bubble_height);
-                                Bitmap markerIcon = Bitmap.createScaledBitmap(activeBackground, width, height, false);
+                                Bitmap markerIcon = Bitmap.createScaledBitmap(background, width, height, false);
+                                placePicInBitmap(mIcon1, markerIcon);
                                 writeTextInBubble(markerIcon, status, displayName);
 //                                Marker newmark = map.addMarker(new MarkerOptions().position(new LatLng(geoloc.getLatitude(), geoloc.getLongitude()))
 //                                        .visible(false)
@@ -729,7 +794,7 @@ public class MyMapActivity extends FragmentActivity implements
     }
 
     private String insertStatusNewlines(String status) {
-        final int status_line_length = 13;
+        final int status_line_length = 28;
         int len = status.length();
         for (int i = status_line_length; i < len; i += status_line_length) {
             int j;
@@ -752,19 +817,20 @@ public class MyMapActivity extends FragmentActivity implements
         paint.setTextSize(getResources().getDimension(R.dimen.status_text_size));
         int y = (int)(getResources().getDimension(R.dimen.status_text_top_padding));
         float x = getResources().getDimension(R.dimen.status_text_left_padding);
-        paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
-        canvas.drawText(displayName, x, y, paint);
-        y += paint.descent() - paint.ascent();
 
         paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.NORMAL));
         int lineNum = 1;
         for (String line : insertStatusNewlines(status).split("\n")) {
-            if (lineNum++ > 3) { // only print the first three lines of the status
+            if (lineNum++ > 3) { // only print the first two lines of the status
                 break;
             }
             canvas.drawText(line, x, y, paint);
             y += paint.descent() - paint.ascent();
         }
+
+        paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        paint.setTextSize(getResources().getDimension(R.dimen.bubble_info_text_size));
+        canvas.drawText(displayName, x, y, paint);
     }
 
     private void getInactiveMarker(final ParseGeoPoint geoloc, final ParseUser user) {
@@ -779,13 +845,12 @@ public class MyMapActivity extends FragmentActivity implements
                         final Bitmap mIcon = BitmapFactory.decodeStream(url.openConnection().getInputStream());
                         final Bitmap background = BitmapFactory.decodeResource(getResources(), R.drawable.shout_bubble_inactive);
                         final Bitmap mIcon1 = mIcon.copy(Bitmap.Config.ARGB_8888, true);
-                        final Bitmap iconBackground = background.copy(Bitmap.Config.ARGB_8888, true);
                         handler.post(new Runnable() {
                             public void run() {
-                                placePicInBitmap(mIcon1, iconBackground);
                                 int width = (int) getResources().getDimension(R.dimen.inactive_bubble_width);
                                 int height = (int) getResources().getDimension(R.dimen.inactive_bubble_height);
-                                Bitmap markerIcon = Bitmap.createScaledBitmap(iconBackground, width, height, false);
+                                final Bitmap markerIcon = Bitmap.createScaledBitmap(background, width, height, false);
+                                placePicInBitmap(mIcon1, markerIcon);
                                 Marker newmark = map.addMarker(new MarkerOptions().position(new LatLng(geoloc.getLatitude(), geoloc.getLongitude()))
                                         .anchor(0.0f,1.0f)
                                         .title(user.getObjectId())
@@ -816,9 +881,8 @@ public class MyMapActivity extends FragmentActivity implements
     }
 
     private void placePicInBitmap(Bitmap mIcon1, Bitmap iconBackground) {
-        if (picSize == -1 || picPadding == -1) {
-            setPicSizeAndPadding(iconBackground);
-        }
+        int picSize = (int) getResources().getDimension(R.dimen.icon_size);
+        int picPadding = (int) getResources().getDimension(R.dimen.icon_padding);
         Bitmap icon = Bitmap.createScaledBitmap(mIcon1, picSize, picSize, false);
         icon = getCroppedBitmap(icon);
         for (int i = 0; i < icon.getWidth(); i++) {
@@ -848,5 +912,4 @@ public class MyMapActivity extends FragmentActivity implements
         }
         return super.onOptionsItemSelected(item);
     }
-
 }

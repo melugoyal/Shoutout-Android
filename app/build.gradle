@@ -5,10 +5,10 @@ android {
     buildToolsVersion '21.1.2'
 
     defaultConfig {
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 23
-        versionCode 9
-        versionName "9.0"
+        versionCode 10
+        versionName "10.0"
     }
     buildTypes {
         release {
