@@ -7,10 +7,17 @@
     <dimen name="bubble_info_text_size">10sp</dimen>
     <dimen name="status_text_left_padding">91dp</dimen>
     <dimen name="status_text_top_padding">17dp</dimen>
+    <dimen name="views_text_left_padding">250dp</dimen>
+    <dimen name="views_text_top_padding">83dp</dimen>
+    <dimen name="views_text_right_endpoint">280dp</dimen>
+    <dimen name="views_text_bottom_endpoint">87dp</dimen>
     <dimen name="inactive_bubble_width">75dp</dimen>
     <dimen name="inactive_bubble_height">90dp</dimen>
     <dimen name="active_bubble_width">289dp</dimen>
     <dimen name="active_bubble_height">90dp</dimen>
+    <dimen name="info_window_width">210dp</dimen>
+    <dimen name="info_window_height">71dp</dimen>
+
     <dimen name="message_button_size">40dp</dimen>
     <dimen name="red_circle_size">20dp</dimen>
     <dimen name="icon_padding">2dp</dimen>
@@ -19,6 +26,7 @@
     <dimen name="online_icon_x_center">9dp</dimen>
     <dimen name="online_icon_y_center">68dp</dimen>
     <dimen name="shoutout_slide_offset">150dp</dimen>
-    <dimen name="inbox_text_padding">4dp</dimen>
-    <dimen name="message_image_padding">40dp</dimen>
+    <dimen name="inbox_text_padding">45dp</dimen>
+    <dimen name="message_image_padding">30dp</dimen>
+    <dimen name="login_screen_pic_size">200dp</dimen>
 </resources>

@@ -9,7 +9,8 @@
         android:id="@+id/map"
         android:name="com.androidmapsextensions.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        tools:layout="@layout/activity_my_map" />
 
     <ImageButton
         android:layout_width="match_parent"
@@ -29,29 +30,39 @@
         android:text="+"
         android:id="@+id/crosshairs"/>
 
+    <ImageView
+        android:id="@+id/changeStatusPin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="10dp"
+        android:visibility="invisible"/>
+
     <EditText
         android:id="@+id/changeStatus"
         android:hint="New status"
         android:inputType="textMultiLine"
+        android:background="@android:color/transparent"
         android:lines="3"
         android:gravity="top|left"
         android:ems="10"
         android:visibility="invisible"
-        android:layout_width="wrap_content"
+        android:layout_marginLeft="130dp"
+        android:layout_marginTop="10dp"
+        android:layout_width="170dp"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"/>
+        android:layout_alignParentTop="true" />
 
-    <TextView
+    <ImageButton
         android:id="@+id/cancel_shout"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
         android:layout_toRightOf="@+id/changeStatus"
-        android:layout_marginLeft="5dp"
-        android:layout_marginTop="5dp"
-        android:onClick="cancelShout"
-        android:clickable="true"
-        android:text="x" />
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="15dp"
+        android:visibility="invisible"
+        android:background="@drawable/x_button" />
 
     <ImageView
         android:layout_width="match_parent"
@@ -67,6 +78,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/changeStatus"
+        android:layout_marginTop="15dp"
         android:layout_centerHorizontal="true"/>
 <!--
     <ImageButton
@@ -156,7 +168,7 @@
     <ListView android:id="@+id/messages_list"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:background="#FFFFFF"
+        android:background="#E0E0E0"
         android:visibility="invisible">
     </ListView>
 

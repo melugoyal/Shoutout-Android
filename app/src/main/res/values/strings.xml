@@ -7,5 +7,6 @@
     <string name="title_activity_login">LoginActivity</string>
     <string name="title_activity_my_map">MyMapActivity</string>
     <string name="facebook_app_id">708013719240954</string>
+    <string name="shoutout_blue">"#2ECEFE"</string>
 
 </resources>

@@ -23,6 +23,7 @@ repositories {
 }
 
 dependencies {
+    compile 'com.parse.bolts:bolts-android:1.+'
     compile 'com.android.support:appcompat-v7:+'
 //    compile 'com.google.android.gms:play-services:4.3.23'
     compile 'com.google.maps.android:android-maps-utils:+'
