@@ -536,7 +536,6 @@ public class MyMapActivity extends FragmentActivity implements
                 AlertDialog.Builder alert = new AlertDialog.Builder(MyMapActivity.this);
 
                 alert.setTitle("Feedback");
-//                alert.setMessage("We a");
 
                 final EditText input = new EditText(MyMapActivity.this);
                 alert.setView(input);
@@ -552,7 +551,6 @@ public class MyMapActivity extends FragmentActivity implements
 
                 alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
-                        // Canceled.
                     }
                 });
                 alert.show();
@@ -1051,11 +1049,6 @@ public class MyMapActivity extends FragmentActivity implements
                                 }
                                 if (ParseUser.getCurrentUser().getObjectId().equals(user.getObjectId())) {
                                     map.getController().setZoom(18.1f);
-//                                    try {
-//                                        marker.getParentHolder().onZoom(new ZoomEvent(map, 18.1f, true));
-//                                    } catch (Exception e) {
-//                                        Log.e("ERROR", "error: + e.getLocalizedMessage()");
-//                                    }
                                 }
                             }
                         });
