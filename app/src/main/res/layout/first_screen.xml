@@ -1,0 +1,60 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/first_screen_background"
+    android:id="@+id/first_screen"
+    tools:context="shoutout2.app.LoginActivity">
+
+    <ImageView
+        android:layout_width="110dp"
+        android:layout_height="110dp"
+        android:id="@+id/logo"
+        android:src="@drawable/login_screen_logo"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/logo"
+        android:layout_marginTop="45dp"
+        android:id="@+id/text_field"
+        android:textSize="20sp"
+        android:singleLine="true"
+        android:textColor="#FFFFFF"
+        android:text="Get on the social map"/>
+
+    <android.support.v4.view.ViewPager
+        android:layout_width="@dimen/slider_pic_width"
+        android:layout_height="@dimen/slider_pic_height"
+        android:layout_marginTop="-25dp"
+        android:id="@+id/pager"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/logo" />
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="70dp"
+        android:layout_alignParentBottom="true">
+
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:id="@+id/signup_button"
+            android:background="#2eceff"
+            android:textSize="25dp"
+            android:textColor="#FFFFFF"
+            android:text="Sign up"/>
+
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:textSize="25dp"
+            android:id="@+id/login_button"
+            android:background="#00e4c9"
+            android:textColor="#FFFFFF"
+            android:text="Log in"/>
+
+    </LinearLayout>
+</RelativeLayout>

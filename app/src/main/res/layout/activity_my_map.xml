@@ -3,24 +3,23 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MyMapActivity" >
+    xmlns:mapbox="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_map_view"
+    tools:context=".MyMapActivity">
 
-    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+    <com.mapbox.mapboxsdk.views.MapView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
         android:id="@+id/map"
-        android:name="com.androidmapsextensions.SupportMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:layout="@layout/activity_my_map" />
+        mapbox:mapid="melugoyal.cifkje08pdqqpsxm7queakfpr"
+        mapbox:accessToken="pk.eyJ1IjoibWVsdWdveWFsIiwiYSI6ImNpZmtqZTFodzE0bmpzM2txY3M4d3YyMTAifQ.uS3VxzgMCV3r5sQD7yv8jQ"/>
 
-    <ImageButton
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/imagebutton"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentTop="true"
-        android:src="@drawable/shoutout_white"
-        android:background="#55006666"
-        android:clickable="true" />
+    <ImageView
+        android:layout_width="100dp"
+        android:layout_height="148dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/shoutout_gray_logo"
+        />
 
     <TextView
         android:layout_width="wrap_content"
@@ -29,169 +28,139 @@
         android:layout_centerHorizontal="true"
         android:text="+"
         android:id="@+id/crosshairs"/>
-
-    <ImageView
-        android:id="@+id/changeStatusPin"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="10dp"
-        android:visibility="invisible"/>
-
-    <EditText
-        android:id="@+id/changeStatus"
-        android:hint="New status"
-        android:inputType="textMultiLine"
-        android:background="@android:color/transparent"
-        android:lines="3"
-        android:gravity="top|left"
-        android:ems="10"
-        android:visibility="invisible"
-        android:layout_marginLeft="130dp"
-        android:layout_marginTop="10dp"
-        android:layout_width="170dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true" />
-
-    <ImageButton
-        android:id="@+id/cancel_shout"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_toRightOf="@+id/changeStatus"
-        android:layout_marginLeft="15dp"
-        android:layout_marginTop="15dp"
-        android:visibility="invisible"
-        android:background="@drawable/x_button" />
-
+<!--
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/loading"
         android:background="#FF00A79D"
         android:src="@drawable/shoutout_logo"/>
-
-    <Button
-        android:id="@+id/updateStatusButton"
-        android:text="Update status"
-        android:visibility="invisible"
-        android:layout_width="wrap_content"
+-->
+    <LinearLayout
+        android:id="@+id/toolbar"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/changeStatus"
-        android:layout_marginTop="15dp"
-        android:layout_centerHorizontal="true"/>
-<!--
-    <ImageButton
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:id="@+id/show_more_button"
-        android:background="@drawable/show_more"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"/>
-
-    <ImageButton
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:id="@+id/query_location_button"
-        android:background="@drawable/query_location"
-        android:layout_alignParentBottom="true"
-        android:layout_toRightOf="@+id/show_more_button"/>
--->
-
-    <ImageView
-        android:layout_width="@dimen/red_circle_size"
-        android:layout_height="@dimen/red_circle_size"
-        android:id="@+id/red_circle"
-        android:background="@drawable/redcircle"
-        android:layout_toRightOf="@+id/message_button"
-        android:layout_marginLeft="-10dp"
-        android:layout_above="@+id/message_button"
-        android:layout_marginBottom="-10dp"
-        android:visibility="invisible"/>
-
-    <ImageButton
-        android:layout_width="@dimen/message_button_size"
-        android:layout_height="@dimen/message_button_size"
-        android:id="@+id/message_button"
-        android:background="@drawable/message"
-        android:layout_alignParentBottom="true"
         android:layout_marginBottom="10dp"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="10dp"/>
-
-    <ImageButton
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:id="@+id/update_shout_button"
-        android:background="@drawable/update_shout"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="10dp"
-        android:layout_centerHorizontal="true"/>
-<!--
-    <ImageButton
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:id="@+id/show_search_bar_button"
-        android:background="@drawable/show_search_bar"
-        android:layout_alignParentBottom="true"
-        android:layout_toRightOf="@+id/update_shout_button"/>
--->
-    <ImageButton
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:id="@+id/settings_button"
-        android:background="@drawable/settings"
-        android:layout_alignParentBottom="true"
-        android:onClick="initSettingsView"
         android:layout_marginLeft="10dp"
-        android:layout_marginBottom="10dp"
-        android:layout_toRightOf="@+id/update_shout_button"/>
+        android:layout_marginRight="10dp">
 
-    <ImageButton
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:id="@+id/my_location_button"
-        android:background="@drawable/my_location"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginBottom="10dp"
-        android:layout_marginRight="10dp" />
+        <ImageButton
+            android:id="@+id/list_view_button"
+            android:layout_width="@dimen/toolbar_button_size"
+            android:layout_height="@dimen/toolbar_button_size"
+            android:layout_gravity="bottom"
+            android:background="@drawable/list_view" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" >
+        </View>
+
+        <RelativeLayout
+            android:id="@+id/message_button_stuff"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom">
+
+            <ImageButton
+                android:layout_width="@dimen/toolbar_button_size"
+                android:layout_height="@dimen/toolbar_button_size"
+                android:id="@+id/message_button"
+                android:background="@drawable/message" />
+
+            <ImageView
+                android:layout_width="@dimen/red_circle_size"
+                android:layout_height="@dimen/red_circle_size"
+                android:id="@+id/red_circle"
+                android:background="@drawable/redcircle"
+                android:layout_toRightOf="@+id/message_button"
+                android:layout_marginLeft="-10dp"
+                android:layout_above="@+id/message_button"
+                android:layout_marginBottom="-10dp"
+                android:visibility="invisible"/>
+
+        </RelativeLayout>
+
+        
+        <View
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" >
+        </View>
+
+        <ImageButton
+            android:id="@+id/update_shout_button"
+            android:layout_width="50dp"
+            android:layout_height="60dp"
+            android:background="@drawable/update_shout" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" >
+        </View>
+
+        <ImageButton
+            android:id="@+id/settings_button"
+            android:layout_width="@dimen/toolbar_button_size"
+            android:layout_height="@dimen/toolbar_button_size"
+            android:layout_gravity="bottom"
+            android:background="@drawable/settings" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" >
+        </View>
+
+        <ImageButton
+            android:id="@+id/my_location_button"
+            android:layout_width="@dimen/toolbar_button_size"
+            android:layout_height="@dimen/toolbar_button_size"
+            android:layout_gravity="bottom"
+            android:background="@drawable/my_location" />
+
+    </LinearLayout>
 
     <ImageView
         android:layout_width="fill_parent"
-        android:layout_height="40dp"
+        android:layout_height="50dp"
         android:id="@+id/gradient"
         android:background="@drawable/gradient_layout"
         android:layout_alignParentBottom="true"
         android:visibility="invisible"/>
 
-    <ListView android:id="@+id/messages_list"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/message_view"
         android:background="#E0E0E0"
         android:visibility="invisible">
-    </ListView>
-
-    <LinearLayout
-        android:id="@+id/settings_list"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_centerInParent="true"
-        android:background="#FFFFFF"
-        android:visibility="invisible">
+        <ImageButton
+            android:id="@+id/message_view_message_button"
+            android:layout_marginLeft="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_width="@dimen/toolbar_button_size"
+            android:layout_height="@dimen/toolbar_button_size"
+            android:background="@drawable/message"/>
         <TextView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Location is public"
-            android:textColor="#ff000000"
-            android:textSize="15sp"/>
-        <ToggleButton
+            android:layout_height="@dimen/toolbar_button_size"
+            android:text="Inbox"
+            android:textColor="#000000"
+            android:textSize="25dp"
+            android:layout_toRightOf="@+id/message_view_message_button"
+            android:layout_marginLeft="5dp"
+            android:gravity="center_vertical"/>
+
+        <ListView android:id="@+id/messages_list"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textOff="Private"
-            android:textOn="Public"
-            android:id="@+id/switch1"
-            android:layout_centerHorizontal="true"/>
-    </LinearLayout>
+            android:layout_height="match_parent"
+            android:layout_below="@+id/message_view_message_button">
+        </ListView>
+
+    </RelativeLayout>
 
 </RelativeLayout>

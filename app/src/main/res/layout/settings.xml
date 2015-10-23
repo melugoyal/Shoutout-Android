@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/settings_view"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/create_profile_background">
+
+
+    <TextView
+        android:id="@+id/settings_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Settings"
+        android:layout_marginTop="20dp"
+        android:layout_centerHorizontal="true"
+        android:textSize="30dp"
+        android:textColor="#FFFFFF"/>
+    <ImageButton
+        android:id="@+id/settings_close"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/x_button"
+        android:alpha="0.9"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="20dp"
+        android:layout_marginRight="20dp"/>
+    <ImageView
+        android:layout_width="125dp"
+        android:layout_height="125dp"
+        android:id="@+id/settings_user_bubble"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_below="@+id/settings_text"
+        android:background="#00000000"
+        android:src="@drawable/random_pic"/>
+    <ImageButton
+        android:id="@+id/settings_change_icon"
+        android:layout_width="75dp"
+        android:layout_height="75dp"
+        android:layout_toLeftOf="@+id/settings_user_bubble"
+        android:layout_above="@+id/settings_user_bubble"
+        android:layout_marginBottom="-117dp"
+        android:layout_marginRight="-120dp"
+        android:background="@drawable/camera"
+        android:alpha=".5"
+        />
+
+    <EditText
+        android:id="@+id/change_username_field"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="20dp"
+        android:layout_below="@+id/settings_text"
+        android:layout_marginTop="40dp"
+        android:hint="Screen name           "
+        android:textSize="20dp"
+        android:textColor="#000000" />
+
+    <Button
+        android:id="@+id/change_username_button"
+        android:layout_width="wrap_content"
+        android:layout_height="35dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="20dp"
+        android:layout_below="@+id/change_username_field"
+        android:layout_marginTop="10dp"
+        android:textSize="20sp"
+        android:textColor="#00FFFF"
+        android:background="#CCFFFFFF"
+        android:hint="   Update   "/>
+
+    <LinearLayout
+        android:id="@+id/share_location_stuff"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="55dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_below="@+id/change_username_button">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Share Location"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="10dp"
+            android:gravity="left"
+            android:textColor="#ffffff"
+            android:layout_weight="1"
+            android:textSize="25sp"/>
+        <ToggleButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textOff="Private"
+            android:textOn="Public"
+            android:id="@+id/switch1" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:layout_below="@+id/share_location_stuff"
+        android:layout_marginTop="55dp">
+
+        <Button
+            android:id="@+id/feedback_button"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:layout_marginRight="5dp"
+            android:background="#2eceff"
+            android:textSize="20dp"
+            android:textColor="#FFFFFF"
+            android:text="Send Feedback"/>
+
+        <Button
+            android:id="@+id/logout_button"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:layout_marginLeft="5dp"
+            android:textSize="20dp"
+            android:background="#00e4c9"
+            android:textColor="#FFFFFF"
+            android:text="Log Out"/>
+
+    </LinearLayout>
+
+
+</RelativeLayout>

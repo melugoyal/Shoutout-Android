@@ -6,6 +6,7 @@
 
     <!-- Need a " " so that showing this isn't a no-op -->
     <TextView
+        android:id="@+id/info_window_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text=" "/>

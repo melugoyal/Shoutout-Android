@@ -18,22 +18,20 @@ public class Person {
     public String status;
     public String username;
     public String updatedAt;
-    public Bitmap icon;
-    public Bitmap activeIcon;
     public Bitmap emptyStatusIcon;
     public Person(ParseUser user) {
         this.userId = user.getObjectId();
-        setFields(user.getString("status"), user.getUsername(), user.getUpdatedAt());
+        this.username = user.getUsername();
+        setFields(user.getString("status"), user.getUpdatedAt());
     }
 
-    public void setFields(String status, String username, Date date) {
+    public void setFields(String status, Date date) {
         this.status = status;
-        this.username = username;
         updatedAt = dateToString(date);
     }
 
     private String dateToString(Date date) {
-        SimpleDateFormat formatter = new SimpleDateFormat("M/d/yy");
+        SimpleDateFormat formatter = new SimpleDateFormat("M/d/yy h:mm a");
         formatter.setTimeZone(TimeZone.getDefault());
         return formatter.format(date);
     }

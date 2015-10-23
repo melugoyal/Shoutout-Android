@@ -1,9 +1,10 @@
 package shoutout2.app;
 
-import android.*;
 import android.Manifest;
-import android.app.Activity;
 import android.app.AlertDialog;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,35 +19,31 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
-
-import com.facebook.AccessToken;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
-import com.facebook.HttpMethod;
-import com.google.android.gms.maps.model.BitmapDescriptor;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.parse.LogInCallback;
 import com.parse.Parse;
 import com.parse.ParseException;
-import com.parse.ParseFacebookUtils;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
-import com.parse.SaveCallback;
 import com.parse.SignUpCallback;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -54,23 +51,23 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 
-public class LoginActivity extends Activity {
+public class LoginActivity extends FragmentActivity {
 
-    private EditText usernameField;
-    private EditText passwordField;
-    private EditText emailField;
-    private Button signinButton;
-    private TextView welcomeText;
-    private Button signupButton;
-    private ImageView logo;
-    private Button changeIconButton;
+    private ViewPager pager;
+    private ImageView userPic;
 
     private ParseObject userImageObj;
     private int SELECT_FILE = 1;
     private int REQUEST_CAMERA = 2;
+
+    private int screen;
+    private final int FIRST_SCREEN = 1;
+    private final int CREATE_PROFILE_SCREEN = 2;
+    private final int LOGIN_SCREEN = 3;
+
+    private RelativeLayout rootView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,46 +78,99 @@ public class LoginActivity extends Activity {
 
         new Permissions(this);
 
-        Parse.initialize(this, Keys.PARSE_APP_ID, Keys.PARSE_CLIENT_KEY);
+        try {
+            Parse.initialize(this, Keys.PARSE_APP_ID, Keys.PARSE_CLIENT_KEY);
+        } catch (Exception e) {
+            Log.d("Parse already init", "assuming user logged out");
+        }
         ParseUser currentUser = ParseUser.getCurrentUser();
         if (currentUser != null) {
             startMapActivity();
             return;
         }
 
-        setContentView(R.layout.activity_login);
-        usernameField = (EditText) findViewById(R.id.username);
-        passwordField = (EditText) findViewById(R.id.password);
-        emailField = (EditText) findViewById(R.id.email);
-        signinButton = (Button) findViewById(R.id.signin_button);
-        welcomeText = (TextView) findViewById(R.id.text_field);
-        signupButton = (Button) findViewById(R.id.signup_button);
-        logo = (ImageView) findViewById(R.id.logo);
-        changeIconButton = (Button) findViewById(R.id.changeIconButton);
+        setContentView(R.layout.first_screen);
+        screen = FIRST_SCREEN;
+        rootView = (RelativeLayout) findViewById(R.id.first_screen);
+        Button loginButton = (Button) findViewById(R.id.login_button);
+        Button signupButton = (Button) findViewById(R.id.signup_button);
+        pager = (ViewPager) findViewById(R.id.pager);
+        pager.setAdapter(new ScreenSlidePagerAdapter(getSupportFragmentManager()));
+        pager.setOffscreenPageLimit(4);
 
-        signinButton.setOnClickListener(new View.OnClickListener() {
+        loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final String username = usernameField.getText().toString();
-                final String password = passwordField.getText().toString();
-                if (usernameTaken(username)) {
-                    login(username, password);
-                } else {
-                    Toast.makeText(LoginActivity.this, "Username doesn't exist. Please sign up.",Toast.LENGTH_LONG);
-                }
+                changeViews(R.layout.login_screen);
+                screen = LOGIN_SCREEN;
+                Button backButton = (Button) findViewById(R.id.login_back_button);
+                final Button nextButton = (Button) findViewById(R.id.login_next_button);
+                Button forgotPasswordButton = (Button) findViewById(R.id.forgot_password_button);
+                final EditText usernameField = (EditText) findViewById(R.id.login_username);
+                final EditText passwordField = (EditText) findViewById(R.id.login_password);
+                nextButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        final String username = usernameField.getText().toString();
+                        final String password = passwordField.getText().toString();
+                        if (Utils.usernameTaken(username)) {
+                            login(username, password);
+                        } else {
+                            Toast.makeText(LoginActivity.this, "Username doesn't exist. Please sign up.",Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+                backButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        LoginActivity.this.onBackPressed();
+                    }
+                });
+                forgotPasswordButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        usernameField.setVisibility(View.GONE);
+                        passwordField.setHint("Email");
+                        nextButton.setText("Send");
+                        nextButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                ParseUser.requestPasswordResetInBackground(passwordField.getText().toString());
+                            }
+                        });
+                    }
+                });
             }
         });
 
         signupButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                signupButton.setVisibility(View.GONE);
-                logo.setBackgroundColor(Color.TRANSPARENT);
-                logo.setImageBitmap(getRandomPic());
-                changeIconButton.setVisibility(View.VISIBLE);
-                emailField.setVisibility(View.VISIBLE);
-                signinButton.setText("Sign up");
-                signinButton.setOnClickListener(new View.OnClickListener() {
+                changeViews(R.layout.create_profile);
+                screen = CREATE_PROFILE_SCREEN;
+//                Button changeIconButton = (Button) findViewById(R.id.changeIconButton);
+                userPic = (ImageView) findViewById(R.id.userPic);
+                userPic.setBackgroundColor(Color.TRANSPARENT);
+                userPic.setImageBitmap(scaleImage(getRandomPic()));
+                Button backButton = (Button) findViewById(R.id.create_profile_back_button);
+                Button nextButton = (Button) findViewById(R.id.create_profile_next_button);
+                final EditText usernameField = (EditText) findViewById(R.id.username);
+                final EditText passwordField = (EditText) findViewById(R.id.password);
+                final EditText emailField = (EditText) findViewById(R.id.email);
+                ImageView createProfileBubble = (ImageView) findViewById(R.id.create_profile_bubble);
+                createProfileBubble.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        selectImage();
+                    }
+                });
+//                changeIconButton.setOnClickListener(new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View v) {
+//                        selectImage();
+//                    }
+//                });
+                nextButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         final String username = usernameField.getText().toString();
@@ -129,25 +179,14 @@ public class LoginActivity extends Activity {
                         signup(username, email, password);
                     }
                 });
+                backButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        LoginActivity.this.onBackPressed();
+                    }
+                });
             }
         });
-
-        changeIconButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                selectImage();
-            }
-        });
-    }
-
-    private boolean usernameTaken(String username) {
-        ParseQuery<ParseUser> newUserQuery = ParseUser.getQuery();
-        newUserQuery.whereEqualTo("username", username);
-        try {
-            return newUserQuery.count() > 0;
-        } catch (Exception e) {
-            return false;
-        }
     }
 
     private Bitmap getRandomPic() {
@@ -203,7 +242,7 @@ public class LoginActivity extends Activity {
         ParseUser.logInInBackground(username, password, new LogInCallback() {
             @Override
             public void done(ParseUser parseUser, ParseException e) {
-                if (parseUser != null) {
+                if (parseUser != null && e == null) {
                     startMapActivity();
                 } else {
                     Log.e("Login Error", e.getLocalizedMessage());
@@ -214,8 +253,12 @@ public class LoginActivity extends Activity {
     }
 
     private void signup(final String username, final String email, final String password) {
-        if (usernameTaken(username)) {
-            Toast.makeText(LoginActivity.this, "Username taken. Please enter a different username.",Toast.LENGTH_LONG);
+        if (Utils.usernameTaken(username)) {
+            Toast.makeText(LoginActivity.this, "Username taken. Please enter a different username.",Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (username.contains(" ")) {
+            Toast.makeText(LoginActivity.this, "Username must be one word.",Toast.LENGTH_LONG).show();
             return;
         }
         ParseUser currentUser = new ParseUser();
@@ -230,80 +273,64 @@ public class LoginActivity extends Activity {
         currentUser.signUpInBackground(new SignUpCallback() {
             @Override
             public void done(ParseException e) {
-                // TODO: ONBOARD
-                startMapActivity();
-            }
-        });
-    }
-
-    private void FBLogin() {
-        List<String> permissions = new ArrayList<>(2);
-        permissions.add("public_profile");
-        permissions.add("user_friends");
-        ParseFacebookUtils.logInWithReadPermissionsInBackground(this, permissions, new LogInCallback() {
-            @Override
-            public void done(final ParseUser user, ParseException err) {
-                if (user == null) {
-                    Log.d("MyApp", "Uh oh. The user cancelled the Facebook login.");
-                    Log.d("parserr", err.toString());
+                if (e == null) {
+                    startMapActivity();
                 } else {
-                    Log.d("User", user.toString());
-                    Log.d("Username", user.getUsername());
-                    if (user.isNew()) {
-                        user.put("status", "Just a man and his thoughts");
-                        user.put("visible", true);
-                        Log.d("userIsNew", "user is new");
-                    }
-                    if (user.getString("displayName") == null) {
-                        new GraphRequest(
-                                AccessToken.getCurrentAccessToken(), "/me", null, HttpMethod.GET,
-                                new GraphRequest.Callback() {
-                                    @Override
-                                    public void onCompleted(GraphResponse graphResponse) {
-                                        try {
-                                            Log.d("graphResponse", graphResponse.toString());
-                                            JSONObject obj = graphResponse.getJSONObject();
-                                            Log.d("graphResponseId", obj.getString("id"));
-                                            Log.d("graphResponseFirstName", obj.getString("first_name"));
-                                            String facebookId = obj.getString("id");
-                                            user.put("username", facebookId);
-                                            user.put("displayName", obj.getString("first_name"));
-                                            String picurl = "https://graph.facebook.com/";
-                                            picurl += (facebookId + "/picture?width=200&height=200");
-                                            user.put("picURL", picurl);
-                                        } catch (Exception e) {
-                                        }
-                                    }
-                                }
-
-                        ).executeAsync();
-                    }
-                    user.saveInBackground(new SaveCallback() {
-                        @Override
-                        public void done(ParseException e) {
-                            //link parse user to fb user
-                            final ParseUser user = ParseUser.getCurrentUser();
-                            if (!ParseFacebookUtils.isLinked(user)) {
-                                ParseFacebookUtils.linkWithReadPermissionsInBackground(user, LoginActivity.this, null, new SaveCallback() {
-                                    @Override
-                                    public void done(ParseException ex) {
-                                        if (ParseFacebookUtils.isLinked(user)) {
-                                            Log.d("shoutout", "linked user");
-                                        }
-                                    }
-                                });
-                            }
-                            startMapActivity();
-                        }
-                    });
+                    Log.e("signup error", "error: " + e.getLocalizedMessage());
                 }
             }
         });
     }
 
+    @Override
+    public void onBackPressed() {
+        if (screen == FIRST_SCREEN) {
+            if (pager.getCurrentItem() == 0) {
+                // If the user is currently looking at the first step, allow the system to handle the
+                // Back button. This calls finish() on this activity and pops the back stack.
+                super.onBackPressed();
+            } else {
+                // Otherwise, select the previous step.
+                pager.setCurrentItem(pager.getCurrentItem() - 1);
+            }
+        } else if (screen == CREATE_PROFILE_SCREEN){
+            rootView.removeView(rootView.findViewById(R.id.create_profile));
+        } else if (screen == LOGIN_SCREEN) {
+            rootView.removeView(rootView.findViewById(R.id.login_screen));
+        }
+        screen = FIRST_SCREEN;
+    }
+
+    private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
+        public ScreenSlidePagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            Fragment f = new ScreenSlideFragment();
+            Bundle args = new Bundle();
+            args.putInt("imageId", getResources().getIdentifier("slider_image_"+(position+1), "drawable", getPackageName()));
+            f.setArguments(args);
+            return f;
+        }
+
+        @Override
+        public int getCount() {
+            return 4;
+        }
+    }
+
+    private void changeViews(int resource) {
+        LayoutInflater inflater = getLayoutInflater();
+        View view = inflater.inflate(resource, rootView);
+        view.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.slide_in_left));
+    }
+
     private void startMapActivity() {
         Intent intent = new Intent(this, MyMapActivity.class);
         startActivity(intent);
+        finish();
     }
 
     @Override
@@ -353,16 +380,20 @@ public class LoginActivity extends Activity {
         } else {
             return;
         }
-        int size = (int) getResources().getDimension(R.dimen.login_screen_pic_size);
-        Bitmap thumbnailCropped = Bitmap.createScaledBitmap(thumbnail, size, size, false);
+        Bitmap thumbnailCropped = Utils.getCroppedBitmap(scaleImage(thumbnail));
         thumbnail.recycle();
-        logo.setImageBitmap(thumbnailCropped);
+        userPic.setImageBitmap(thumbnailCropped);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         thumbnailCropped.compress(Bitmap.CompressFormat.PNG, 100, stream);
         ParseFile imageFile = new ParseFile("userpic.png", stream.toByteArray());
         userImageObj = new ParseObject("Images");
         userImageObj.put("image", imageFile);
         userImageObj.saveInBackground();
+    }
+
+    private Bitmap scaleImage(Bitmap img) {
+        int size = (int) getResources().getDimension(R.dimen.login_screen_pic_size);
+        return Bitmap.createScaledBitmap(img, size, size, false);
     }
 
     @Override

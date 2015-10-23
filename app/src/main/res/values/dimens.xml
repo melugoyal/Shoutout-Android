@@ -3,7 +3,7 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="cluster_text_size">15sp</dimen>
-    <dimen name="status_text_size">15sp</dimen>
+    <dimen name="status_text_size">13sp</dimen>
     <dimen name="bubble_info_text_size">10sp</dimen>
     <dimen name="status_text_left_padding">91dp</dimen>
     <dimen name="status_text_top_padding">17dp</dimen>
@@ -17,16 +17,24 @@
     <dimen name="active_bubble_height">90dp</dimen>
     <dimen name="info_window_width">210dp</dimen>
     <dimen name="info_window_height">71dp</dimen>
+    <dimen name="info_window_padding_left">70dp</dimen>
+    <dimen name="info_window_padding_bottom">50dp</dimen>
 
-    <dimen name="message_button_size">40dp</dimen>
+    <dimen name="toolbar_button_size">40dp</dimen>
     <dimen name="red_circle_size">20dp</dimen>
     <dimen name="icon_padding">2dp</dimen>
     <dimen name="icon_size">71dp</dimen>
-    <dimen name="online_icon_size">4dp</dimen>
+    <dimen name="online_icon_size">8dp</dimen>
     <dimen name="online_icon_x_center">9dp</dimen>
     <dimen name="online_icon_y_center">68dp</dimen>
+
+    <dimen name="online_icon_left_padding">5dp</dimen>
+    <dimen name="online_icon_bottom_padding">48dp</dimen>
+
     <dimen name="shoutout_slide_offset">150dp</dimen>
     <dimen name="inbox_text_padding">45dp</dimen>
     <dimen name="message_image_padding">30dp</dimen>
-    <dimen name="login_screen_pic_size">200dp</dimen>
+    <dimen name="login_screen_pic_size">122dp</dimen>
+    <dimen name="slider_pic_width">300dp</dimen>
+    <dimen name="slider_pic_height">441dp</dimen>
 </resources>

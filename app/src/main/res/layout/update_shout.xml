@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:id="@+id/update_shout_view"
+    android:background="#9900A79D">
+
+    <ImageView
+        android:layout_width="100dp"
+        android:layout_height="148dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/shoutout_white_logo"
+        />
+
+    <ImageView
+        android:id="@+id/changeStatusPin"
+        android:layout_width="@dimen/active_bubble_width"
+        android:layout_height="@dimen/active_bubble_height"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="160dp"
+        android:src="@drawable/shout_bubble_active" />
+
+    <EditText
+        android:id="@+id/newStatus"
+        android:hint="New status"
+        android:inputType="textMultiLine"
+        android:background="@android:color/transparent"
+        android:lines="3"
+        android:gravity="top|left"
+        android:ems="10"
+        android:layout_marginLeft="130dp"
+        android:layout_marginTop="160dp"
+        android:layout_width="170dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true" />
+
+    <ImageButton
+        android:id="@+id/cancel_shout"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_toRightOf="@+id/newStatus"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="15dp"
+        android:background="@drawable/x_button"
+        android:alpha="0.9"/>
+
+    <Button
+        android:id="@+id/updateStatusButton"
+        android:textColor="#0000FF"
+        android:background="#CCFFFFFF"
+        android:text="    Update    "
+        android:textSize="15sp"
+        android:layout_width="wrap_content"
+        android:layout_height="35dp"
+        android:layout_below="@+id/newStatus"
+        android:layout_toRightOf="@+id/changeStatusPin"
+        android:layout_marginLeft="-80dp"
+        android:layout_marginTop="25dp" />
+
+</RelativeLayout>
