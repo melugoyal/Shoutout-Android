@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content" android:layout_height="wrap_content">
+    <ImageView
+        android:id="@+id/marker_bubble"
+        android:layout_width="@dimen/inactive_bubble_width"
+        android:layout_height="@dimen/inactive_bubble_height"
+        android:src="@drawable/shout_bubble_inactive"/>
+
+    <ImageView
+        android:id="@+id/userPic"
+        android:layout_width="@dimen/icon_size"
+        android:layout_height="@dimen/icon_size"
+        android:layout_marginLeft="@dimen/icon_padding"
+        android:layout_marginTop="@dimen/icon_padding"
+        android:src="@drawable/random_pic"/>
+    <ImageView
+        android:id="@+id/onlineIcon"
+        android:src="@drawable/online_icon"
+        android:visibility="gone"
+        android:layout_width="@dimen/online_icon_size"
+        android:layout_height="@dimen/online_icon_size"
+        android:layout_below="@+id/marker_bubble"
+        android:layout_marginLeft="@dimen/online_icon_left_padding"
+        android:layout_marginTop="@dimen/online_icon_bottom_padding"
+        android:gravity="left|bottom"
+        />
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="@dimen/info_window_width" android:layout_height="@dimen/info_window_height" android:background="@android:color/transparent"
+        android:layout_marginLeft="@dimen/info_window_padding_left"
+        android:id="@+id/infoWindow">
+        <ImageView
+            android:id="@+id/status_bubble"
+            android:layout_width="@dimen/info_window_width"
+            android:layout_height="@dimen/info_window_height"
+            android:background="@drawable/message_list_item"/>
+        <TextView
+            android:id="@+id/status"
+            android:layout_width="@dimen/info_window_width"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="15dp"
+            android:layout_centerVertical="true"
+            android:text=""
+            android:maxLines="3"
+            android:textColor="#000000"
+            android:textSize="@dimen/status_text_size"/>
+        <TextView
+            android:id="@+id/username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/status_bubble"
+            android:layout_marginLeft="30dp"
+            android:layout_marginBottom="2dp"
+            android:textStyle="bold"
+            android:textColor="#000000"
+            android:text="username"
+            android:textSize="@dimen/bubble_info_text_size"/>
+        <TextView
+            android:id="@+id/date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/status_bubble"
+            android:layout_alignEnd="@+id/status_bubble"
+            android:layout_marginRight="20dp"
+            android:layout_marginBottom="2dp"
+            android:textColor="#000000"
+            android:text="12/31/13 11:00PM"
+            android:textSize="@dimen/bubble_info_text_size"/>
+    </RelativeLayout>
+
+</RelativeLayout>

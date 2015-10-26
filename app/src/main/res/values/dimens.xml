@@ -29,7 +29,7 @@
     <dimen name="online_icon_y_center">68dp</dimen>
 
     <dimen name="online_icon_left_padding">5dp</dimen>
-    <dimen name="online_icon_bottom_padding">48dp</dimen>
+    <dimen name="online_icon_bottom_padding">-26dp</dimen>
 
     <dimen name="shoutout_slide_offset">150dp</dimen>
     <dimen name="inbox_text_padding">45dp</dimen>

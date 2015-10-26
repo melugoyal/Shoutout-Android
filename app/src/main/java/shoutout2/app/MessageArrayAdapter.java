@@ -1,23 +1,18 @@
 package shoutout2.app;
 
 import android.content.Context;
-import android.content.res.Resources;
-import android.graphics.Typeface;
-import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import com.parse.ParseObject;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import com.parse.ParseObject;
 
 public class MessageArrayAdapter<T> extends ArrayAdapter<T> {
     private List<ParseObject> messageObjects = new ArrayList<>();

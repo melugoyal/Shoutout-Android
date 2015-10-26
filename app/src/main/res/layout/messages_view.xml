@@ -1,43 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal" android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:id="@+id/message_view"
+    android:background="#E0E0E0">
 
-    <ImageView
-        android:id="@+id/icon"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="4dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginRight="4dp"
-
-        android:adjustViewBounds="true"
-        android:cropToPadding="false"
-        android:scaleType="fitEnd"
-        android:src="@drawable/message_list_item" >
-    </ImageView>
-
+    <ImageButton
+        android:id="@+id/message_view_message_button"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_width="@dimen/toolbar_button_size"
+        android:layout_height="@dimen/toolbar_button_size"
+        android:background="@drawable/message"/>
     <TextView
-        android:id="@+id/label"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="115dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginRight="15dp"
-        android:text="Messages"
+        android:layout_height="@dimen/toolbar_button_size"
+        android:text="Inbox"
         android:textColor="#000000"
-        android:textSize="@dimen/status_text_size" >
-    </TextView>
+        android:textSize="25dp"
+        android:layout_toRightOf="@+id/message_view_message_button"
+        android:layout_marginLeft="5dp"
+        android:gravity="center_vertical"/>
 
-    <TextView
-        android:id="@+id/sender_username"
+    <ListView android:id="@+id/messages_list"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="115dp"
-        android:layout_marginTop="80dp"
-        android:layout_marginRight="15dp"
-        android:text="Messages"
-        android:textColor="#000000"
-        android:textSize="@dimen/bubble_info_text_size" >
-    </TextView>
+        android:layout_height="match_parent"
+        android:layout_below="@+id/message_view_message_button">
+    </ListView>
+
 </RelativeLayout>

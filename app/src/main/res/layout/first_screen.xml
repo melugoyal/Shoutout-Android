@@ -2,9 +2,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/first_screen_background"
     android:id="@+id/first_screen"
-    tools:context="shoutout2.app.LoginActivity">
+    android:background="@drawable/first_screen_background"
+    tools:context="shoutout2.app.Login.LoginActivity">
 
     <ImageView
         android:layout_width="110dp"

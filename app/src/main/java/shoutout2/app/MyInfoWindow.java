@@ -1,18 +1,13 @@
 package shoutout2.app;
 
-import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
-
-import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.overlay.Marker;
 import com.mapbox.mapboxsdk.views.InfoWindow;
 import com.mapbox.mapboxsdk.views.MapView;
 
+import shoutout2.app.MapView.MapActivity;
+
 public class MyInfoWindow extends InfoWindow {
-    private MyMapActivity mapActivity;
+    private MapActivity mapActivity;
 
     public MyInfoWindow(MapView mapView) {
         super(R.layout.no_info_window, mapView);

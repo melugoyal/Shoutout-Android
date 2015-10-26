@@ -29,7 +29,7 @@ repositories {
 dependencies {
     compile 'com.parse.bolts:bolts-android:1.+'
     compile 'com.android.support:appcompat-v7:+'
-    compile 'com.google.android.gms:play-services:6.5.87'
+    compile 'com.google.android.gms:play-services:8.1.0'
 
     compile 'com.vividsolutions:jts:1.13'
     compile 'com.squareup.okhttp:okhttp:2.4.0'

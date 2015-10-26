@@ -1,4 +1,4 @@
-package shoutout2.app;
+package shoutout2.app.Login;
 
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -6,6 +6,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+
+import shoutout2.app.R;
 
 public class ScreenSlideFragment extends Fragment {
 
