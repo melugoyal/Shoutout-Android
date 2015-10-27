@@ -36,7 +36,6 @@ public class LandingFragment extends Fragment {
         pager = (ViewPager) view.findViewById(R.id.pager);
         new ScreenSlidePagerAdapter(getChildFragmentManager());
         pager.setAdapter(new ScreenSlidePagerAdapter(getChildFragmentManager()));
-        pager.setOffscreenPageLimit(4);
         Button loginButton = (Button) view.findViewById(R.id.login_button);
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -387,7 +387,6 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
                                 }
                                 if (ParseUser.getCurrentUser().getObjectId().equals(user.getObjectId())) {
                                     map.getController().setZoom(18.1f);
-                                    mapView.findViewById(R.id.loading).setVisibility(View.INVISIBLE);
                                 }
                             }
                         });

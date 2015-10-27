@@ -201,7 +201,6 @@ public class MapActivity extends FragmentActivity implements
         mLocationRequest.setFastestInterval(UPDATE_INTERVAL);
         LocationServices.FusedLocationApi.requestLocationUpdates(mLocationClient, mLocationRequest, this);
 
-        mapFragment.mapView.findViewById(R.id.loading).setVisibility(View.VISIBLE);
         try {
             final Handler handler = new Handler();
             Thread th = new Thread(new Runnable() {

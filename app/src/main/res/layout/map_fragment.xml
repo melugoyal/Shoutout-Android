@@ -29,14 +29,6 @@
         android:text="+"
         android:id="@+id/crosshairs"/>
 
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/loading"
-        android:background="#FF00A79D"
-        android:visibility="invisible"
-        android:src="@drawable/shoutout_logo"/>
-
     <LinearLayout
         android:id="@+id/toolbar"
         android:layout_width="fill_parent"

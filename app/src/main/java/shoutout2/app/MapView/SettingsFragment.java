@@ -70,7 +70,7 @@ public class SettingsFragment extends Fragment{
         });
 
         userPic = (ImageView) view.findViewById(R.id.settings_user_bubble);
-        userPic.setImageDrawable(new BitmapDrawable(getResources(), Utils.getUserIcon(ParseUser.getCurrentUser())));
+        userPic.setImageDrawable(new BitmapDrawable(getResources(), Utils.getCroppedBitmap(Utils.getUserIcon(ParseUser.getCurrentUser()))));
 
         ImageButton closeButton = (ImageButton) view.findViewById(R.id.settings_close);
         closeButton.setOnClickListener(new View.OnClickListener() {
