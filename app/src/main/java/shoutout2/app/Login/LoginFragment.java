@@ -37,7 +37,7 @@ public class LoginFragment extends Fragment {
                 final String username = usernameField.getText().toString();
                 final String password = passwordField.getText().toString();
                 if (Utils.usernameTaken(username)) {
-                    login(username, password);
+                    login(username.toLowerCase(), password);
                 } else {
                     Toast.makeText(getActivity(), "Username doesn't exist. Please sign up.", Toast.LENGTH_LONG).show();
                 }

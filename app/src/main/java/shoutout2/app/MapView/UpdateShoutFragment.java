@@ -72,7 +72,7 @@ public class UpdateShoutFragment extends Fragment {
     protected static void checkStatusForMessage(final String status) {
         for (String word : status.split("[^a-zA-Z\\d@]")) { // split on all characters except letters, numbers and @
             if (word.startsWith("@")) {
-                String username = word.substring(1);
+                String username = word.substring(1).toLowerCase();
                 ParseQuery<ParseUser> query = ParseUser.getQuery();
                 query.whereEqualTo("username", username);
                 query.getFirstInBackground(new GetCallback<ParseUser>() {

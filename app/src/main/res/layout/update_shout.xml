@@ -27,8 +27,8 @@
         android:lines="3"
         android:gravity="top|left"
         android:ems="10"
-        android:layout_marginLeft="134dp"
-        android:layout_marginTop="161dp"
+        android:layout_marginLeft="139dp"
+        android:layout_marginTop="163dp"
         android:layout_width="170dp"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true" />
@@ -37,10 +37,10 @@
         android:id="@+id/cancel_shout"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:layout_toRightOf="@+id/newStatus"
-        android:layout_marginLeft="15dp"
-        android:layout_marginTop="15dp"
         android:background="@drawable/x_button"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="20dp"
+        android:layout_marginRight="20dp"
         android:alpha="0.9"/>
 
     <Button

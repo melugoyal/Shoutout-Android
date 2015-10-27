@@ -104,7 +104,7 @@ public class SignupFragment extends Fragment {
             return;
         }
         ParseUser currentUser = new ParseUser();
-        currentUser.setUsername(username);
+        currentUser.setUsername(username.toLowerCase());
         currentUser.setPassword(password);
         currentUser.setEmail(email);
         currentUser.put("displayName", username);

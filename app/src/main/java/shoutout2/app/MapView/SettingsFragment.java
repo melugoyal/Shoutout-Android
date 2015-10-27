@@ -95,7 +95,7 @@ public class SettingsFragment extends Fragment{
                     Toast.makeText(mapActivity, "Username must be one word.",Toast.LENGTH_LONG).show();
                     return;
                 }
-                ParseUser.getCurrentUser().setUsername(username);
+                ParseUser.getCurrentUser().setUsername(username.toLowerCase());
                 InputMethodManager imm = (InputMethodManager)mapActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
                 mapActivity.people.get(ParseUser.getCurrentUser().getObjectId()).username = username;

@@ -48,7 +48,7 @@ public class Utils {
 
     public static boolean usernameTaken(String username) {
         ParseQuery<ParseUser> newUserQuery = ParseUser.getQuery();
-        newUserQuery.whereEqualTo("username", username);
+        newUserQuery.whereEqualTo("username", username.toLowerCase());
         try {
             return newUserQuery.count() > 0;
         } catch (Exception e) {
