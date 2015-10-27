@@ -49,11 +49,10 @@ public class MapActivity extends FragmentActivity implements
 
     public Map<String, Marker> markers;
     public Map<String, Person> people;
-    private GoogleApiClient mLocationClient;
-    private static final int UPDATE_INTERVAL = 5000; // milliseconds
-    private static boolean firstConnect = true;
+    protected GoogleApiClient mLocationClient;
     protected MessageNumCircle messageNumCircle;
     private MapFragment mapFragment;
+    private static final int UPDATE_INTERVAL = 5000; // milliseconds
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,18 +60,7 @@ public class MapActivity extends FragmentActivity implements
         new Permissions(this);
         setContentView(R.layout.map_activity);
 
-        FragmentManager fragmentManager = getFragmentManager();
-        mapFragment = (MapFragment) fragmentManager.findFragmentByTag(MapFragment.TAG);
-
-        if (mapFragment == null) {
-            mapFragment = new MapFragment();
-        }
-
-        fragmentManager
-                .beginTransaction()
-                .add(R.id.map_activity_container, mapFragment, MapFragment.TAG)
-                .addToBackStack(null)
-                .commit();
+        createMapFragment();
 
         markers = new HashMap<>();
         people = new HashMap<>();
@@ -129,14 +117,13 @@ public class MapActivity extends FragmentActivity implements
 
     public void changeMarkerOnlineStatus(String userId, boolean online) {
         Person person = people.get(userId);
+        if (person == null) {
+            return;
+        }
         View markerView = person.markerView;
         markerView.findViewById(R.id.onlineIcon).setVisibility(online ? View.VISIBLE : View.GONE);
         markerView.findViewById(R.id.infoWindow).setVisibility(View.GONE);
         person.inactiveMarker = Utils.viewToBitmap(markerView);
-
-        if (online) {
-            makeMarkerActive(userId);
-        }
     }
 
     public void hideUserMarkers(String userId) {
@@ -189,20 +176,32 @@ public class MapActivity extends FragmentActivity implements
      */
     @Override
     public void onConnected(Bundle dataBundle) {
-        mapFragment.map.clear();
-        findViewById(R.id.loading).setVisibility(View.VISIBLE);
+        if (mapFragment != null) {
+            mapFragment.map.clear();
+        }
+        for (Person person : people.values()) {
+            try {
+                person.inactiveMarker.recycle();
+                person.emptyStatusIcon.recycle();
+                person.scaledInactiveMarker.recycle();
+            } catch (Exception e) {
+                Log.e("error clearing person", person.username + " " + e.getLocalizedMessage());
+            }
+        }
+        people.clear();
         if (Permissions.requestPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
             doLocationStuff();
         }
     }
 
-    private void doLocationStuff() {
+    protected void doLocationStuff() {
         LocationRequest mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationRequest.setInterval(UPDATE_INTERVAL);
         mLocationRequest.setFastestInterval(UPDATE_INTERVAL);
         LocationServices.FusedLocationApi.requestLocationUpdates(mLocationClient, mLocationRequest, this);
 
+        mapFragment.mapView.findViewById(R.id.loading).setVisibility(View.VISIBLE);
         try {
             final Handler handler = new Handler();
             Thread th = new Thread(new Runnable() {
@@ -217,12 +216,13 @@ public class MapActivity extends FragmentActivity implements
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                if (firstConnect) {
+                                if (mapFragment.maplat == 0 && mapFragment.maplong == 0) {
+                                    ParseGeoPoint currloc = ParseUser.getCurrentUser().getParseGeoPoint("geo");
                                     mapFragment.map.setCenter(new LatLng(currloc.getLatitude(), currloc.getLongitude()));
-                                    firstConnect = false;
                                 } else {
-                                    mapFragment.map.setCenter(new LatLng(MapFragment.maplat, MapFragment.maplong));
+                                    mapFragment.map.setCenter(new LatLng(mapFragment.maplat, mapFragment.maplong));
                                 }
+
                                 ParseQuery<ParseUser> query = ParseUser.getQuery();
                                 query.whereWithinMiles("geo", currloc, 50);
                                 query.findInBackground(new FindCallback<ParseUser>() {
@@ -232,8 +232,7 @@ public class MapActivity extends FragmentActivity implements
                                                 ParseGeoPoint geoloc = objectList.get(i).getParseGeoPoint("geo");
                                                 ParseUser user = objectList.get(i);
                                                 people.put(user.getObjectId(), new Person(user));
-                                                mapFragment.getEmptyStatusIcon(geoloc, user);
-//                                                mapFragment.getInactiveMarker(geoloc, user);
+                                                mapFragment.getIcons(geoloc, user);
                                             }
                                         }
                                     }
@@ -251,6 +250,17 @@ public class MapActivity extends FragmentActivity implements
         catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void createMapFragment() {
+        FragmentManager fragmentManager = getFragmentManager();
+        mapFragment = (MapFragment) fragmentManager.findFragmentByTag(MapFragment.TAG);
+
+        if (mapFragment == null) {
+            mapFragment = new MapFragment();
+        }
+
+        Utils.addFragment(fragmentManager, R.id.map_activity_container, MapFragment.TAG, mapFragment);
     }
 
     @Override
@@ -306,7 +316,6 @@ public class MapActivity extends FragmentActivity implements
             }
         }
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

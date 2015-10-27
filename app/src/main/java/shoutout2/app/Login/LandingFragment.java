@@ -5,6 +5,7 @@ import android.app.FragmentManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.KeyEvent;
@@ -21,11 +22,21 @@ public class LandingFragment extends Fragment {
     public static final String TAG = "landing_fragment_tag";
     private ViewPager pager;
 
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.first_screen, container, false);
 
+        pager = (ViewPager) view.findViewById(R.id.pager);
+        new ScreenSlidePagerAdapter(getChildFragmentManager());
+        pager.setAdapter(new ScreenSlidePagerAdapter(getChildFragmentManager()));
+        pager.setOffscreenPageLimit(4);
         Button loginButton = (Button) view.findViewById(R.id.login_button);
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -56,9 +67,6 @@ public class LandingFragment extends Fragment {
             }
         });
 
-        pager = (ViewPager) view.findViewById(R.id.pager);
-        pager.setAdapter(new ScreenSlidePagerAdapter(((FragmentActivity) getActivity()).getSupportFragmentManager()));
-        pager.setOffscreenPageLimit(4);
         view.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -79,14 +87,13 @@ public class LandingFragment extends Fragment {
         return view;
     }
 
-    private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
-        public ScreenSlidePagerAdapter(android.support.v4.app.FragmentManager fm) {
+    private class ScreenSlidePagerAdapter extends android.support.v13.app.FragmentPagerAdapter {
+        public ScreenSlidePagerAdapter(FragmentManager fm) {
             super(fm);
         }
-
         @Override
-        public android.support.v4.app.Fragment getItem(int position) {
-            android.support.v4.app.Fragment f = new ScreenSlideFragment();
+        public Fragment getItem(int position) {
+            Fragment f = new ScreenSlideFragment();
             Bundle args = new Bundle();
             args.putInt("imageId", getResources().getIdentifier("slider_image_" + (position + 1), "drawable", getActivity().getPackageName()));
             f.setArguments(args);

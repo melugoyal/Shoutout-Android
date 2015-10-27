@@ -93,6 +93,17 @@ public class Utils {
                 .commit();
     }
 
+    public static void addFragment(FragmentManager fragmentManager, int old, String tag, Fragment fragment) {
+        fragmentManager
+                .beginTransaction()
+//                .setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
+                .add(old,
+                        fragment,
+                        tag)
+                .addToBackStack(null)
+                .commit();
+    }
+
     public static Bitmap viewToBitmap(View v) {
         v.setDrawingCacheEnabled(true);
         v.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),

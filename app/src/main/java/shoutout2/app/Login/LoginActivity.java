@@ -50,11 +50,7 @@ public class LoginActivity extends FragmentActivity {
             fragment = new LandingFragment();
         }
 
-        fragmentManager
-                .beginTransaction()
-                .add(R.id.login_activity_container, fragment, LandingFragment.TAG)
-                .addToBackStack(null)
-                .commit();
+        Utils.addFragment(fragmentManager, R.id.login_activity_container, LandingFragment.TAG, fragment);
     }
 
     @Override

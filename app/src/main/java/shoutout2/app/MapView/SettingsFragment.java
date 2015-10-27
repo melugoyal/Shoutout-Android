@@ -23,9 +23,11 @@ import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 
 import java.io.ByteArrayOutputStream;
 
@@ -147,14 +149,18 @@ public class SettingsFragment extends Fragment{
             return;
         }
         Bitmap thumbnail = Utils.photoActivityResultHelper(SettingsFragment.this, requestCode, data);
-        userPic.setImageDrawable(new BitmapDrawable(getResources(), thumbnail));
+        userPic.setImageDrawable(new BitmapDrawable(getResources(), Utils.getCroppedBitmap(thumbnail)));
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         thumbnail.compress(Bitmap.CompressFormat.PNG, 100, stream);
         ParseFile imageFile = new ParseFile("userpic.png", stream.toByteArray());
-        ParseObject userImageObj = new ParseObject("Images");
+        final ParseObject userImageObj = new ParseObject("Images");
         userImageObj.put("image", imageFile);
-        userImageObj.saveInBackground();
-        thumbnail.recycle();
+        userImageObj.saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                ParseUser.getCurrentUser().put("profileImage", userImageObj);
+            }
+        });
     }
 
     @Override

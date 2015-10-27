@@ -42,7 +42,8 @@ public class UpdateShoutFragment extends Fragment {
         mEdit.setText("");
         mEdit.append(statusParam.length > 0 ? statusParam[0] : ParseUser.getCurrentUser().getString("status"));
         mEdit.requestFocus();
-        mgr.showSoftInput(mEdit, InputMethodManager.SHOW_IMPLICIT);
+        mgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+//        mgr.showSoftInput(mEdit, InputMethodManager.SHOW_IMPLICIT);
 
         changeStatusPin.setImageBitmap(mapActivity.people.get(ParseUser.getCurrentUser().getObjectId()).emptyStatusIcon);
 
@@ -50,6 +51,7 @@ public class UpdateShoutFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 mgr.hideSoftInputFromWindow(mEdit.getWindowToken(), 0);
+                mapActivity.onBackPressed();
             }
         });
 

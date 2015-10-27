@@ -119,6 +119,7 @@ public class SignupFragment extends Fragment {
                     Utils.startMapActivity(getActivity());
                 } else {
                     Log.e("signup error", "error: " + e.getLocalizedMessage());
+                    Toast.makeText(getActivity(), e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
                 }
             }
         });

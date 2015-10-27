@@ -20,6 +20,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.mapbox.mapboxsdk.api.ILatLng;
 import com.mapbox.mapboxsdk.events.MapListener;
 import com.mapbox.mapboxsdk.events.RotateEvent;
@@ -29,8 +32,13 @@ import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.overlay.Marker;
 import com.mapbox.mapboxsdk.views.MapView;
 import com.mapbox.mapboxsdk.views.MapViewListener;
+import com.parse.FindCallback;
+import com.parse.ParseException;
 import com.parse.ParseGeoPoint;
+import com.parse.ParseQuery;
 import com.parse.ParseUser;
+
+import java.util.List;
 
 import shoutout2.app.MessageNumCircle;
 import shoutout2.app.MyInfoWindow;
@@ -44,10 +52,10 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
     protected MapView map;
     private static final int CLUSTER_ZOOM_LEVEL = 16;
     private static final int MIN_ZOOM = 3;
-    protected static double maplat;
-    protected static double maplong;
+    protected double maplat;
+    protected double maplong;
     private Resources res;
-    private View mapView;
+    protected View mapView;
 
     @Nullable
     @Override
@@ -61,13 +69,6 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
         map.setMapViewListener(this);
         map.addListener(this);
         map.setMinZoomLevel(MIN_ZOOM);
-
-//        if (maplat == 0 && maplong == 0) {
-//            ParseGeoPoint currloc = ParseUser.getCurrentUser().getParseGeoPoint("geo");
-//            map.setCenter(new LatLng(currloc.getLatitude(), currloc.getLongitude()));
-//        } else {
-//            map.setCenter(new LatLng(maplat, maplong));
-//        }
 
         initMyLocationButton();
         initListViewButton();
@@ -166,7 +167,8 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
         if (fragment == null) {
             fragment = new MessagesFragment();
         }
-        Utils.replaceFragment(fragmentManager, R.id.map_activity_container, MessagesFragment.TAG, fragment);
+        Utils.addFragment(fragmentManager, R.id.map_activity_container, MessagesFragment.TAG, fragment);
+//        Utils.replaceFragment(fragmentManager, R.id.map_activity_container, MessagesFragment.TAG, fragment);
     }
 
     private void initSettingsButton() {
@@ -195,9 +197,9 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
         if (fragment == null) {
             fragment = new SettingsFragment();
         }
-        Utils.replaceFragment(fragmentManager, R.id.map_activity_container, SettingsFragment.TAG, fragment);
+        Utils.addFragment(fragmentManager, R.id.map_activity_container, SettingsFragment.TAG, fragment);
+//        Utils.replaceFragment(fragmentManager, R.id.map_activity_container, SettingsFragment.TAG, fragment);
     }
-
 
     protected void initInfoWindow(View markerView, String userId) {
         View v = markerView.findViewById(R.id.infoWindow);
@@ -300,7 +302,7 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
         return key;
     }
 
-    protected void getEmptyStatusIcon(final ParseGeoPoint geoloc, final ParseUser user) {
+    protected void getIcons(final ParseGeoPoint geoloc, final ParseUser user) {
         try {
             final Handler handler = new Handler();
             Thread th = new Thread(new Runnable() {
@@ -350,7 +352,7 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
         }
         catch (Exception e) {
             e.printStackTrace();
-            getEmptyStatusIcon(geoloc,user);
+            getIcons(geoloc, user);
         }
     }
 
@@ -413,6 +415,7 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
             args.putStringArray("statusParam", statusParam);
             fragment.setArguments(args);
         }
-        Utils.replaceFragment(fragmentManager, R.id.map_activity_container, UpdateShoutFragment.TAG, fragment);
+//        Utils.replaceFragment(fragmentManager, R.id.map_activity_container, UpdateShoutFragment.TAG, fragment);
+        Utils.addFragment(fragmentManager, R.id.map_activity_container, UpdateShoutFragment.TAG, fragment);
     }
 }
