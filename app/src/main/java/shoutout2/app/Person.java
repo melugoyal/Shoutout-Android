@@ -17,6 +17,7 @@ public class Person {
     public Bitmap emptyStatusIcon;
     public Bitmap inactiveMarker;
     public Bitmap scaledInactiveMarker;
+    public Bitmap icon;
     public View markerView;
 
     public Person(ParseUser user) {

@@ -1,6 +1,9 @@
 package shoutout2.app;
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,10 +12,14 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.parse.ParseObject;
+import com.parse.ParseUser;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import shoutout2.app.MapView.MapActivity;
+import shoutout2.app.Utils.Utils;
 
 public class MessageArrayAdapter<T> extends ArrayAdapter<T> {
     private List<ParseObject> messageObjects = new ArrayList<>();
@@ -32,12 +39,18 @@ public class MessageArrayAdapter<T> extends ArrayAdapter<T> {
         TextView statusText = (TextView) itemView.findViewById(R.id.label);
         TextView usernameText = (TextView) itemView.findViewById(R.id.sender_username);
         ParseObject messageObject = messageObjects.get(position);
+        ParseUser user;
+        try {
+            user = messageObject.fetchIfNeeded().getParseUser("from");
+        } catch (Exception e) {
+            user = null;
+        }
         statusText.setText("");
         String message = "";
         String username = "";
         try {
             message = messageObject.fetchIfNeeded().getString("message");
-            username = messageObject.fetchIfNeeded().getParseUser("from").fetchIfNeeded().getUsername();
+            username = user.fetchIfNeeded().getUsername();
         } catch (Exception e) {
             Log.e("ERROR SHOWING MESSAGE", messageObject.getObjectId() + " " + e.getLocalizedMessage());
         }
@@ -48,9 +61,16 @@ public class MessageArrayAdapter<T> extends ArrayAdapter<T> {
         statusText.setText(message);
         usernameText.setText(username);
         try {
-            imageView.setImageBitmap(people.get(messageObject.fetchIfNeeded().getParseUser("from").fetchIfNeeded().getObjectId()).emptyStatusIcon);
+            Person person = people.get(user.fetchIfNeeded().getObjectId());
+            Bitmap icon;
+            if (person == null || person.icon == null) {
+                icon = Utils.getCroppedBitmap(Utils.getUserIcon(user));
+            } else {
+                icon = person.icon;
+            }
+            imageView.setImageDrawable(new BitmapDrawable(Resources.getSystem(), icon));
         } catch (Exception e) {
-            Log.e("IMAGE FOR MESSAGE VIEW", messageObject.getObjectId() + " " + people.get(messageObject.getParseUser("from").getObjectId()));
+            Log.e("IMAGE FOR MESSAGE VIEW", messageObject.getObjectId() + " " + username + " " + e.getLocalizedMessage());
         }
         return itemView;
     }

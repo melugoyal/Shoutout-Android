@@ -167,7 +167,7 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
         if (fragment == null) {
             fragment = new MessagesFragment();
         }
-        Utils.addFragment(fragmentManager, R.id.map_activity_container, MessagesFragment.TAG, fragment);
+        Utils.addFragment(fragmentManager, R.id.map_activity_container, MessagesFragment.TAG, fragment, true);
 //        Utils.replaceFragment(fragmentManager, R.id.map_activity_container, MessagesFragment.TAG, fragment);
     }
 
@@ -197,7 +197,7 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
         if (fragment == null) {
             fragment = new SettingsFragment();
         }
-        Utils.addFragment(fragmentManager, R.id.map_activity_container, SettingsFragment.TAG, fragment);
+        Utils.addFragment(fragmentManager, R.id.map_activity_container, SettingsFragment.TAG, fragment, true);
 //        Utils.replaceFragment(fragmentManager, R.id.map_activity_container, SettingsFragment.TAG, fragment);
     }
 
@@ -229,7 +229,7 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
 
     @Override
     public void onZoom(ZoomEvent event) {
-        float scale = (event.getZoomLevel() - MIN_ZOOM + 1) / map.getMaxZoomLevel();
+        float scale = (event.getZoomLevel()*0.9f - MIN_ZOOM + 1) / map.getMaxZoomLevel() * 0.85f;
         int width = (int) (scale * getResources().getDimension(R.dimen.inactive_bubble_width));
         int height = (int) (scale * getResources().getDimension(R.dimen.inactive_bubble_height));
         for (Marker marker : mapActivity.markers.values()) {
@@ -262,7 +262,7 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
     @Override
     public void onTapMarker(final MapView pMapView, final Marker marker){
         if (marker.bubbleShowing) {
-            mapActivity.startMessageTo(marker.getTitle());
+            mapActivity.startMessageTo(mapActivity.people.get(marker.getTitle()).username);
         } else {
             mapActivity.makeMarkerActive(marker.getTitle());
         }
@@ -320,24 +320,28 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                int width = (int) res.getDimension(R.dimen.inactive_bubble_width);
-                                int height = (int) res.getDimension(R.dimen.inactive_bubble_height);
-                                final Bitmap markerIcon = Bitmap.createScaledBitmap(background, width, height, false);
-                                background.recycle();
+                                    int width = (int) res.getDimension(R.dimen.inactive_bubble_width);
+                                    int height = (int) res.getDimension(R.dimen.inactive_bubble_height);
+                                    final Bitmap markerIcon = Bitmap.createScaledBitmap(background, width, height, false);
+                                    background.recycle();
 
-                                LayoutInflater inflater = mapActivity.getLayoutInflater();
-                                View view = inflater.inflate(R.layout.marker, null);
-                                ((ImageView)view.findViewById(R.id.marker_bubble)).setImageBitmap(markerIcon);
-                                int picSize = (int) res.getDimension(R.dimen.icon_size);
-                                Bitmap icon = Bitmap.createScaledBitmap(mIcon1, picSize, picSize, false);
-                                ((ImageView)view.findViewById(R.id.userPic)).setImageBitmap(Utils.getCroppedBitmap(icon));
+                                    LayoutInflater inflater = mapActivity.getLayoutInflater();
+                                    View view = inflater.inflate(R.layout.marker, null);
+                                    ((ImageView) view.findViewById(R.id.marker_bubble)).setImageBitmap(markerIcon);
+                                    int picSize = (int) res.getDimension(R.dimen.icon_size);
+                                    Bitmap icon = Bitmap.createScaledBitmap(mIcon1, picSize, picSize, false);
+                                    icon = Utils.getCroppedBitmap(icon);
+                                    person.icon = icon;
+                                    ((ImageView) view.findViewById(R.id.userPic)).setImageBitmap(icon);
 
-                                View infoWindow = view.findViewById(R.id.infoWindow);
-                                infoWindow.setVisibility(View.VISIBLE);
-                                infoWindow.findViewById(R.id.status).setVisibility(View.GONE);
-                                infoWindow.findViewById(R.id.username).setVisibility(View.GONE);
-                                infoWindow.findViewById(R.id.date).setVisibility(View.GONE);
-                                person.emptyStatusIcon = Utils.viewToBitmap(view);
+                                if (user.getObjectId().equals(ParseUser.getCurrentUser().getObjectId())) { // only need empty status icon for the currernt user
+                                    View infoWindow = view.findViewById(R.id.infoWindow);
+                                    infoWindow.setVisibility(View.VISIBLE);
+                                    infoWindow.findViewById(R.id.status).setVisibility(View.GONE);
+                                    infoWindow.findViewById(R.id.username).setVisibility(View.GONE);
+                                    infoWindow.findViewById(R.id.date).setVisibility(View.GONE);
+                                    person.emptyStatusIcon = Utils.viewToBitmap(view);
+                                }
                                 person.markerView = view;
                                 getInactiveMarker(geoloc, user);
                             }
@@ -415,6 +419,6 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
             fragment.setArguments(args);
         }
 //        Utils.replaceFragment(fragmentManager, R.id.map_activity_container, UpdateShoutFragment.TAG, fragment);
-        Utils.addFragment(fragmentManager, R.id.map_activity_container, UpdateShoutFragment.TAG, fragment);
+        Utils.addFragment(fragmentManager, R.id.map_activity_container, UpdateShoutFragment.TAG, fragment, true);
     }
 }

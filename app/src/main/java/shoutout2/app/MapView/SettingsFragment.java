@@ -31,6 +31,7 @@ import com.parse.SaveCallback;
 
 import java.io.ByteArrayOutputStream;
 
+import shoutout2.app.Login.LoginActivity;
 import shoutout2.app.Utils.FirebaseUtils;
 import shoutout2.app.Permissions;
 import shoutout2.app.R;
@@ -70,7 +71,7 @@ public class SettingsFragment extends Fragment{
         });
 
         userPic = (ImageView) view.findViewById(R.id.settings_user_bubble);
-        userPic.setImageDrawable(new BitmapDrawable(getResources(), Utils.getCroppedBitmap(Utils.getUserIcon(ParseUser.getCurrentUser()))));
+        userPic.setImageDrawable(new BitmapDrawable(getResources(), mapActivity.people.get(ParseUser.getCurrentUser().getObjectId()).icon));
 
         ImageButton closeButton = (ImageButton) view.findViewById(R.id.settings_close);
         closeButton.setOnClickListener(new View.OnClickListener() {
@@ -136,7 +137,7 @@ public class SettingsFragment extends Fragment{
             public void onClick(View v) {
                 mapActivity.finish();
                 ParseUser.logOut();
-//                startActivity(new Intent(MapActivity.this, LoginActivity.class));
+                startActivity(new Intent(mapActivity, LoginActivity.class));
             }
         });
         return view;

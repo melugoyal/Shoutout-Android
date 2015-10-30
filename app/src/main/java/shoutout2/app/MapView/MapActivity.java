@@ -86,8 +86,8 @@ public class MapActivity extends FragmentActivity implements
         });
     }
 
-    public void startMessageTo(String userId) {
-        mapFragment.updateStatus("@" + people.get(userId).username + " ");
+    public void startMessageTo(String username) {
+        mapFragment.updateStatus("@" + username + " ");
     }
 
     public void makeMarkerActive(final String userId) {
@@ -259,7 +259,7 @@ public class MapActivity extends FragmentActivity implements
             mapFragment = new MapFragment();
         }
 
-        Utils.addFragment(fragmentManager, R.id.map_activity_container, MapFragment.TAG, mapFragment);
+        Utils.addFragment(fragmentManager, R.id.map_activity_container, MapFragment.TAG, mapFragment, false);
     }
 
     @Override

@@ -16,7 +16,8 @@ public class ScreenSlideFragment extends Fragment {
                              Bundle savedInstanceState) {
         ImageView rootView = (ImageView) inflater.inflate(
                 R.layout.screen_slide, container, false);
-        rootView.setBackgroundResource(getArguments().getInt("imageId"));
+        rootView.setImageResource(getArguments().getInt("imageId"));
+//        rootView.setBackgroundResource(getArguments().getInt("imageId"));
         return rootView;
     }
 }

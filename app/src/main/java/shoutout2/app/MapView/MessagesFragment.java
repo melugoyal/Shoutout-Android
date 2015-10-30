@@ -46,13 +46,13 @@ public class MessagesFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 ParseObject item = (ParseObject) messagesListView.getAdapter().getItem(i);
+                mapActivity.onBackPressed();
                 try {
-                    mapActivity.startMessageTo(item.fetchIfNeeded().getParseUser("from").fetchIfNeeded().getObjectId());
+                    mapActivity.startMessageTo(item.fetchIfNeeded().getParseUser("from").fetchIfNeeded().getUsername());
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
                 mapActivity.updateMessageButton();
-                mapActivity.onBackPressed();
             }
         });
         return view;

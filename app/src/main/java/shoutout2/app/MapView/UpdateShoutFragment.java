@@ -12,6 +12,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 import com.parse.GetCallback;
 import com.parse.ParseException;
@@ -36,6 +37,7 @@ public class UpdateShoutFragment extends Fragment {
         final Button updateStatus = (Button) view.findViewById(R.id.updateStatusButton);
         final ImageButton cancelShoutButton = (ImageButton) view.findViewById(R.id.cancel_shout);
         final ImageView changeStatusPin = (ImageView) view.findViewById(R.id.changeStatusPin);
+        final RelativeLayout updateShoutView = (RelativeLayout) view.findViewById(R.id.update_shout_view);
         final InputMethodManager mgr = (InputMethodManager) mapActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
 
         String[] statusParam = getArguments().getStringArray("statusParam");
@@ -43,7 +45,6 @@ public class UpdateShoutFragment extends Fragment {
         mEdit.append(statusParam.length > 0 ? statusParam[0] : ParseUser.getCurrentUser().getString("status"));
         mEdit.requestFocus();
         mgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-//        mgr.showSoftInput(mEdit, InputMethodManager.SHOW_IMPLICIT);
 
         changeStatusPin.setImageBitmap(mapActivity.people.get(ParseUser.getCurrentUser().getObjectId()).emptyStatusIcon);
 
@@ -52,6 +53,13 @@ public class UpdateShoutFragment extends Fragment {
             public void onClick(View v) {
                 mgr.hideSoftInputFromWindow(mEdit.getWindowToken(), 0);
                 mapActivity.onBackPressed();
+            }
+        });
+
+        updateShoutView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                cancelShoutButton.callOnClick();
             }
         });
 

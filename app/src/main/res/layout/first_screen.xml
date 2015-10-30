@@ -3,9 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/first_screen"
-    android:background="@drawable/first_screen_background"
+    android:background="@drawable/map_background"
     tools:context="shoutout2.app.Login.LoginActivity">
-
     <ImageView
         android:layout_width="110dp"
         android:layout_height="110dp"
@@ -24,37 +23,41 @@
         android:text="Get on the social map"/>
 
     <android.support.v4.view.ViewPager
-        android:layout_width="@dimen/slider_pic_width"
-        android:layout_height="@dimen/slider_pic_height"
-        android:layout_marginTop="-25dp"
-        android:id="@+id/pager"
         android:layout_centerHorizontal="true"
-        android:layout_below="@+id/logo" />
-
-    <LinearLayout
+        android:layout_below="@+id/text_field"
+        android:layout_marginTop="20dp"
+        android:layout_above="@+id/signup_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/pager" />
+    <com.viewpagerindicator.CirclePageIndicator
+        android:id="@+id/titles"
+        android:layout_height="wrap_content"
         android:layout_width="fill_parent"
-        android:layout_height="70dp"
-        android:layout_alignParentBottom="true">
+        android:layout_below="@+id/pager"
+        android:layout_marginTop="-15dp"/>
+    <Button
+        android:layout_width="150dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="5dp"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@+id/login_button"
+        android:id="@+id/signup_button"
+        android:background="#2eceff"
+        android:textSize="25dp"
+        android:textColor="#FFFFFF"
+        android:text="Sign up"/>
 
-        <Button
-            android:layout_width="0dp"
-            android:layout_height="fill_parent"
-            android:layout_weight="1"
-            android:id="@+id/signup_button"
-            android:background="#2eceff"
-            android:textSize="25dp"
-            android:textColor="#FFFFFF"
-            android:text="Sign up"/>
-
-        <Button
-            android:layout_width="0dp"
-            android:layout_height="fill_parent"
-            android:layout_weight="1"
-            android:textSize="25dp"
-            android:id="@+id/login_button"
-            android:background="#00e4c9"
-            android:textColor="#FFFFFF"
-            android:text="Log in"/>
-
-    </LinearLayout>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp"
+        android:textSize="20dp"
+        android:id="@+id/login_button"
+        android:background="#00000000"
+        android:textColor="#FFFFFF"
+        android:text="Log in"/>
 </RelativeLayout>

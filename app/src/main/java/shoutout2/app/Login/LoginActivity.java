@@ -50,7 +50,7 @@ public class LoginActivity extends FragmentActivity {
             fragment = new LandingFragment();
         }
 
-        Utils.addFragment(fragmentManager, R.id.login_activity_container, LandingFragment.TAG, fragment);
+        Utils.addFragment(fragmentManager, R.id.login_activity_container, LandingFragment.TAG, fragment, false);
     }
 
     @Override

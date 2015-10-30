@@ -57,6 +57,9 @@ public class Utils {
     }
 
     public static Bitmap getCroppedBitmap(Bitmap sbmp) {
+        if (sbmp == null) {
+            return null;
+        }
         Bitmap output = Bitmap.createBitmap(sbmp.getWidth(),
                 sbmp.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(output);
@@ -93,15 +96,25 @@ public class Utils {
                 .commit();
     }
 
-    public static void addFragment(FragmentManager fragmentManager, int old, String tag, Fragment fragment) {
-        fragmentManager
-                .beginTransaction()
+    public static void addFragment(FragmentManager fragmentManager, int old, String tag, Fragment fragment, boolean backStack) {
+        if (backStack) {
+            fragmentManager
+                    .beginTransaction()
 //                .setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
-                .add(old,
-                        fragment,
-                        tag)
-                .addToBackStack(null)
-                .commit();
+                    .add(old,
+                            fragment,
+                            tag)
+                    .addToBackStack(null)
+                    .commit();
+        } else {
+            fragmentManager
+                    .beginTransaction()
+//                .setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right)
+                    .add(old,
+                            fragment,
+                            tag)
+                    .commit();
+        }
     }
 
     public static Bitmap viewToBitmap(View v) {

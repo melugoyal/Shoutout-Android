@@ -14,6 +14,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
+import com.viewpagerindicator.CirclePageIndicator;
+import com.viewpagerindicator.TitlePageIndicator;
+
 import shoutout2.app.R;
 import shoutout2.app.Utils.Utils;
 
@@ -36,6 +39,8 @@ public class LandingFragment extends Fragment {
         pager = (ViewPager) view.findViewById(R.id.pager);
         new ScreenSlidePagerAdapter(getChildFragmentManager());
         pager.setAdapter(new ScreenSlidePagerAdapter(getChildFragmentManager()));
+        CirclePageIndicator pageIndicator = (CirclePageIndicator) view.findViewById(R.id.titles);
+        pageIndicator.setViewPager(pager);
         Button loginButton = (Button) view.findViewById(R.id.login_button);
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override

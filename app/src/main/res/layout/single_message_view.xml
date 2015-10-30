@@ -1,27 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal" android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:orientation="horizontal"
+    android:layout_width="fill_parent"
+    android:layout_height="70dp">
 
     <ImageView
         android:id="@+id/icon"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:layout_marginStart="4dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginRight="4dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:src="@drawable/random_pic" >
+    </ImageView>
 
+    <ImageView
+        android:id="@+id/bubble"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_toRightOf="@+id/icon"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_marginLeft="-8dp"
+        android:layout_marginRight="5dp"
+        android:src="@drawable/message_list_item"
         android:adjustViewBounds="true"
-        android:cropToPadding="false"
-        android:scaleType="fitEnd"
-        android:src="@drawable/message_list_item" >
+        android:scaleType="fitXY">
     </ImageView>
 
     <TextView
         android:id="@+id/label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="115dp"
+        android:layout_marginStart="75dp"
         android:layout_marginTop="10dp"
         android:layout_marginRight="15dp"
         android:text="Messages"
@@ -33,8 +44,8 @@
         android:id="@+id/sender_username"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="115dp"
-        android:layout_marginTop="80dp"
+        android:layout_marginStart="75dp"
+        android:layout_marginTop="50dp"
         android:layout_marginRight="15dp"
         android:text="Messages"
         android:textColor="#000000"

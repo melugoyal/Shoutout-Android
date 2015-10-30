@@ -3,6 +3,7 @@ package shoutout2.app.Login;
 import android.app.Fragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -53,6 +54,8 @@ public class LoginFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 usernameField.setVisibility(View.GONE);
+                passwordField.setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+                passwordField.setText("");
                 passwordField.setHint("Email");
                 nextButton.setText("Send");
                 nextButton.setOnClickListener(new View.OnClickListener() {

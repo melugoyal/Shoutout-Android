@@ -33,7 +33,7 @@
             android:id="@+id/status_bubble"
             android:layout_width="@dimen/info_window_width"
             android:layout_height="@dimen/info_window_height"
-            android:background="@drawable/message_list_item"/>
+            android:background="@drawable/shout_bubble"/>
         <TextView
             android:id="@+id/status"
             android:layout_width="@dimen/info_window_width"

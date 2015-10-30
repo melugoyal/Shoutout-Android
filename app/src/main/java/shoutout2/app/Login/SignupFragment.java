@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -45,7 +46,26 @@ public class SignupFragment extends Fragment {
 
         userPic = (ImageView) v.findViewById(R.id.userPic);
         userPic.setBackgroundColor(Color.TRANSPARENT);
-        userPic.setImageBitmap(scaleImage(getRandomPic()));
+        try {
+            final Handler handler = new Handler();
+            Thread th = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        final Bitmap icon = getRandomPic();
+                        handler.post(new Runnable() {
+                            public void run() {
+                                userPic.setImageBitmap(scaleImage(icon));
+                            }
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            th.start();
+        } catch (Exception e1) {
+            e1.printStackTrace();
+        }
         Button backButton = (Button) v.findViewById(R.id.create_profile_back_button);
         Button nextButton = (Button) v.findViewById(R.id.create_profile_next_button);
         final EditText usernameField = (EditText) v.findViewById(R.id.username);
