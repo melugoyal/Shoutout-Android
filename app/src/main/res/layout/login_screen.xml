@@ -6,10 +6,11 @@
 
     <ImageView
         android:id="@+id/login_screen_logo"
-        android:layout_width="220dp"
-        android:layout_height="220dp"
+        android:layout_width="330dp"
+        android:layout_height="330dp"
+        android:layout_marginTop="50dp"
         android:layout_centerHorizontal="true"
-        android:src="@drawable/login_screen_logo" />
+        android:src="@drawable/shoutout_white_logo" />
 
     <EditText
         android:id="@+id/login_username"
@@ -17,7 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/login_screen_logo"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="-100dp"
         android:hint="Screen Name"
         android:nextFocusForward="@+id/login_password"
         android:singleLine="true" />

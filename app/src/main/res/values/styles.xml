@@ -4,5 +4,10 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
     </style>
+    
+    <color name="shoutout_blue">#2ECEFE</color>
+    <color name="shoutout_blue_transparent">#AA2ECEFE</color>
+    <color name="shoutout_green">#00A89B</color>
+    <color name="shoutout_green_transparent">#AA00A89B</color>
 
 </resources>

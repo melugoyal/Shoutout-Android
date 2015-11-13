@@ -119,6 +119,10 @@ public class SignupFragment extends Fragment {
             Toast.makeText(getActivity(), "Username taken. Please enter a different username.", Toast.LENGTH_LONG).show();
             return;
         }
+        if (username.matches("^.*[^a-zA-Z\\d].*$")) { // make sure username is only alphanumeric
+            Toast.makeText(getActivity(), "Username must be one word and contain no special characters.", Toast.LENGTH_LONG).show();
+            return;
+        }
         if (username.contains(" ")) {
             Toast.makeText(getActivity(), "Username must be one word.", Toast.LENGTH_LONG).show();
             return;
@@ -127,7 +131,7 @@ public class SignupFragment extends Fragment {
         currentUser.setUsername(username.toLowerCase());
         currentUser.setPassword(password);
         currentUser.setEmail(email);
-        currentUser.put("displayName", username);
+        currentUser.put("platform", "Android");
         currentUser.put("status", "");
         currentUser.put("visible", true);
         currentUser.put("online", false);
@@ -138,16 +142,22 @@ public class SignupFragment extends Fragment {
                 if (e == null) {
                     Utils.startMapActivity(getActivity());
                 } else {
-                    Log.e("signup error", "error: " + e.getLocalizedMessage());
-                    Toast.makeText(getActivity(), e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                    String error = e.getLocalizedMessage();
+                    Log.e("signup error", "error: " + error);
+                    Toast.makeText(getActivity(), error.substring(error.indexOf(":") + 1), Toast.LENGTH_LONG).show();
                 }
             }
         });
     }
 
     private Bitmap scaleImage(Bitmap img) {
-        int size = (int) getResources().getDimension(R.dimen.login_screen_pic_size);
-        return Bitmap.createScaledBitmap(img, size, size, false);
+        try {
+            int size = (int) getResources().getDimension(R.dimen.login_screen_pic_size);
+            return Bitmap.createScaledBitmap(img, size, size, false);
+        } catch (Exception e) {
+            Log.e("error scaling", e.getLocalizedMessage());
+        }
+        return null;
     }
 
     @Override

@@ -1,10 +1,12 @@
 package shoutout2.app.MapView;
 
+import android.app.ActionBar;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
 import android.os.Bundle;
@@ -17,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,10 +55,14 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
     protected MapView map;
     private static final int CLUSTER_ZOOM_LEVEL = 16;
     private static final int MIN_ZOOM = 3;
+    protected float scale = 1f;
+    private double latitudeOffset = 0; // will be non-zero when list view is showing
     protected double maplat;
     protected double maplong;
     private Resources res;
     protected View mapView;
+    protected ListViewFragment listViewFragment;
+    private View crosshairs;
 
     @Nullable
     @Override
@@ -69,6 +76,7 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
         map.setMapViewListener(this);
         map.addListener(this);
         map.setMinZoomLevel(MIN_ZOOM);
+        crosshairs = mapView.findViewById(R.id.crosshairs);
 
         initMyLocationButton();
         initListViewButton();
@@ -87,9 +95,13 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         myLocationButton.setBackgroundResource(R.drawable.my_location_pressed);
-                        final ParseGeoPoint currLoc = ParseUser.getCurrentUser().getParseGeoPoint("geo");
-                        map.getController().animateTo(new LatLng(currLoc.getLatitude(), currLoc.getLongitude()));
-                        mapActivity.makeMarkerActive(ParseUser.getCurrentUser().getObjectId());
+                        try {
+                            final ParseGeoPoint currLoc = ParseUser.getCurrentUser().fetchIfNeeded().getParseGeoPoint("geo");
+                            map.getController().animateTo(new LatLng(currLoc.getLatitude() - latitudeOffset, currLoc.getLongitude()));
+                            mapActivity.makeMarkerActive(ParseUser.getCurrentUser().getObjectId());
+                        } catch (Exception e) {
+                            Log.e("location button error", e.getLocalizedMessage());
+                        }
                         return true;
                     case MotionEvent.ACTION_UP:
                         myLocationButton.setBackgroundResource(R.drawable.my_location);
@@ -108,7 +120,7 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         listViewButton.setBackgroundResource(R.drawable.list_view_pressed);
-                        Toast.makeText(mapActivity, "List view coming soon.", Toast.LENGTH_LONG).show();
+                        initListView();
                         return true;
                     case MotionEvent.ACTION_UP:
                         listViewButton.setBackgroundResource(R.drawable.list_view);
@@ -160,6 +172,32 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
         mapActivity.updateMessageButton();
     }
 
+    private void initListView() {
+        FragmentManager fragmentManager = getFragmentManager();
+        listViewFragment = (ListViewFragment) fragmentManager.findFragmentByTag(ListViewFragment.TAG);
+        if (listViewFragment == null) {
+            listViewFragment = new ListViewFragment();
+        }
+
+        Point size = new Point();
+        mapActivity.getWindowManager().getDefaultDisplay().getSize(size);
+        float paddingTop = res.getDimension(R.dimen.list_view_padding_top);
+        if (listViewFragment.isVisible()) {
+            ILatLng newCenter = map.getProjection().fromPixels(size.x/2.0f, paddingTop/2.0f);
+            map.getController().animateTo(newCenter);
+            crosshairs.setY(size.y / 2.0f);
+            latitudeOffset = 0;
+            mapActivity.onBackPressed();
+        } else {
+            Utils.addFragment(fragmentManager, R.id.map_activity_container, ListViewFragment.TAG, listViewFragment, true);
+            ILatLng newCenter = map.getProjection().fromPixels(size.x/2.0f, size.y - paddingTop/2.0f);
+            latitudeOffset = map.getCenter().getLatitude() - newCenter.getLatitude();
+            map.getController().animateTo(newCenter);
+            crosshairs.setY(res.getDimension(R.dimen.list_view_padding_top) / 2.0f);
+            mapView.findViewById(R.id.list_view_triangle).setVisibility(View.VISIBLE);
+        }
+    }
+
     private void initMessagesView() {
         FragmentManager fragmentManager = getFragmentManager();
         Fragment fragment = fragmentManager.findFragmentByTag(MessagesFragment.TAG);
@@ -168,7 +206,6 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
             fragment = new MessagesFragment();
         }
         Utils.addFragment(fragmentManager, R.id.map_activity_container, MessagesFragment.TAG, fragment, true);
-//        Utils.replaceFragment(fragmentManager, R.id.map_activity_container, MessagesFragment.TAG, fragment);
     }
 
     private void initSettingsButton() {
@@ -198,7 +235,6 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
             fragment = new SettingsFragment();
         }
         Utils.addFragment(fragmentManager, R.id.map_activity_container, SettingsFragment.TAG, fragment, true);
-//        Utils.replaceFragment(fragmentManager, R.id.map_activity_container, SettingsFragment.TAG, fragment);
     }
 
     protected void initInfoWindow(View markerView, String userId) {
@@ -215,9 +251,9 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
 
     @Override
     public void onScroll(ScrollEvent event) {
-        LatLng pos = map.getCenter();
-        maplat = pos.getLatitude();
-        maplong = pos.getLongitude();
+        ILatLng center = map.getProjection().fromPixels(crosshairs.getX(), crosshairs.getY());
+        maplat = center.getLatitude();
+        maplong = center.getLongitude();
         String closestMarkerUserId = "";
         try {
             closestMarkerUserId = findClosestMarker(maplat, maplong);
@@ -225,22 +261,25 @@ public class MapFragment extends Fragment implements MapViewListener, MapListene
             Log.e("err finding closest", "error " + e.getLocalizedMessage());
         }
         mapActivity.makeMarkerActive(closestMarkerUserId);
+        if (listViewFragment != null && listViewFragment.isVisible()) {
+            listViewFragment.getPins();
+        }
     }
 
     @Override
     public void onZoom(ZoomEvent event) {
-        float scale = (event.getZoomLevel()*0.9f - MIN_ZOOM + 1) / map.getMaxZoomLevel() * 0.85f;
+        int minZoomForScaling = CLUSTER_ZOOM_LEVEL - 5;
+        scale = Math.max((event.getZoomLevel() - minZoomForScaling) / (map.getMaxZoomLevel() - minZoomForScaling), 0.35f) - 0.15f;
         int width = (int) (scale * getResources().getDimension(R.dimen.inactive_bubble_width));
         int height = (int) (scale * getResources().getDimension(R.dimen.inactive_bubble_height));
         for (Marker marker : mapActivity.markers.values()) {
-            if (marker.bubbleShowing) {
-                continue;
-            }
             Person person = mapActivity.people.get(marker.getTitle());
             if (person.inactiveMarker != null) {
                 Bitmap newPic = Bitmap.createScaledBitmap(person.inactiveMarker, width, height, false);
                 person.scaledInactiveMarker = newPic;
-                marker.setMarker(new BitmapDrawable(getResources(), newPic));
+                if (!marker.bubbleShowing) {
+                    marker.setMarker(new BitmapDrawable(getResources(), newPic));
+                }
             }
         }
     }

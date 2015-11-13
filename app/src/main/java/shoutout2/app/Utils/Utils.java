@@ -130,11 +130,10 @@ public class Utils {
     }
 
     public static String dateToString(Date date) {
-        SimpleDateFormat formatter = new SimpleDateFormat("M/d/yy h:mm a");
+        SimpleDateFormat formatter = new SimpleDateFormat("M/d h:mm a");
         formatter.setTimeZone(TimeZone.getDefault());
         return formatter.format(date);
     }
-
 
     public static void selectImage(final Fragment origin) {
         final CharSequence[] items = {"Take Photo", "Choose from Library", "Cancel"};

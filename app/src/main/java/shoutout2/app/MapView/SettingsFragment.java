@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,6 +33,7 @@ import com.parse.SaveCallback;
 import java.io.ByteArrayOutputStream;
 
 import shoutout2.app.Login.LoginActivity;
+import shoutout2.app.Person;
 import shoutout2.app.Utils.FirebaseUtils;
 import shoutout2.app.Permissions;
 import shoutout2.app.R;
@@ -70,8 +72,19 @@ public class SettingsFragment extends Fragment{
             }
         });
 
-        userPic = (ImageView) view.findViewById(R.id.settings_user_bubble);
-        userPic.setImageDrawable(new BitmapDrawable(getResources(), mapActivity.people.get(ParseUser.getCurrentUser().getObjectId()).icon));
+        final ParseUser currentUser;
+        try {
+            currentUser = ParseUser.getCurrentUser().fetchIfNeeded();
+        } catch (Exception e) {
+            Log.e("fetch error", e.getLocalizedMessage() + " ");
+            return view;
+        }
+
+        Person person = mapActivity.people.get(currentUser.getObjectId());
+        if (person != null) {
+            userPic = (ImageView) view.findViewById(R.id.settings_user_bubble);
+            userPic.setImageDrawable(new BitmapDrawable(getResources(), person.icon));
+        }
 
         ImageButton closeButton = (ImageButton) view.findViewById(R.id.settings_close);
         closeButton.setOnClickListener(new View.OnClickListener() {
@@ -82,7 +95,7 @@ public class SettingsFragment extends Fragment{
         });
 
         final EditText usernameField = (EditText) view.findViewById(R.id.change_username_field);
-        usernameField.setText(ParseUser.getCurrentUser().getUsername());
+        usernameField.setText(currentUser.getUsername());
         Button changeUsernameButton = (Button) view.findViewById(R.id.change_username_button);
         changeUsernameButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -96,10 +109,11 @@ public class SettingsFragment extends Fragment{
                     Toast.makeText(mapActivity, "Username must be one word.",Toast.LENGTH_LONG).show();
                     return;
                 }
-                ParseUser.getCurrentUser().setUsername(username.toLowerCase());
+                currentUser.setUsername(username.toLowerCase());
+                currentUser.saveInBackground();
                 InputMethodManager imm = (InputMethodManager)mapActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-                mapActivity.people.get(ParseUser.getCurrentUser().getObjectId()).username = username;
+                mapActivity.people.get(currentUser.getObjectId()).username = username;
             }
         });
 

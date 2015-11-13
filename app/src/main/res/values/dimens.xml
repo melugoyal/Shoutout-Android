@@ -3,33 +3,46 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="cluster_text_size">15sp</dimen>
-    <dimen name="status_text_size">13sp</dimen>
-    <dimen name="bubble_info_text_size">10sp</dimen>
+    <dimen name="status_text_size">8dp</dimen>
+    <dimen name="bubble_info_text_size">8sp</dimen>
     <dimen name="status_text_left_padding">91dp</dimen>
     <dimen name="status_text_top_padding">17dp</dimen>
     <dimen name="views_text_left_padding">250dp</dimen>
     <dimen name="views_text_top_padding">83dp</dimen>
     <dimen name="views_text_right_endpoint">280dp</dimen>
-    <dimen name="views_text_bottom_endpoint">87dp</dimen>
-    <dimen name="inactive_bubble_width">75dp</dimen>
-    <dimen name="inactive_bubble_height">90dp</dimen>
+    <dimen name="views_text_bottom_endpoint">87dp</dimen>A
+
+    <dimen name="inactive_bubble_width">56dp</dimen>
+    <dimen name="inactive_bubble_height">67dp</dimen>
+    <dimen name="inactive_bubble_min_width">10dp</dimen>
+    <dimen name="inactive_bubble_min_height">12dp</dimen>
+
     <dimen name="active_bubble_width">289dp</dimen>
     <dimen name="active_bubble_height">90dp</dimen>
-    <dimen name="info_window_width">210dp</dimen>
-    <dimen name="info_window_height">71dp</dimen>
-    <dimen name="info_window_padding_left">70dp</dimen>
+    <dimen name="active_bubble_min_width">38dp</dimen>
+    <dimen name="active_bubble_min_height">12dp</dimen>
+
+    <dimen name="info_window_width">169dp</dimen>
+    <dimen name="info_window_height">57dp</dimen>
+    <dimen name="info_window_padding_left">45dp</dimen>
     <dimen name="info_window_padding_bottom">50dp</dimen>
 
-    <dimen name="toolbar_button_size">40dp</dimen>
+    <dimen name="toolbar_button_width">41dp</dimen>
+    <dimen name="toolbar_button_height">44dp</dimen>
     <dimen name="red_circle_size">20dp</dimen>
+    <dimen name="triangle_width">57dp</dimen>
+    <dimen name="triangle_height">49dp</dimen>
     <dimen name="icon_padding">2dp</dimen>
-    <dimen name="icon_size">71dp</dimen>
+    <dimen name="icon_size">52dp</dimen>
     <dimen name="online_icon_size">8dp</dimen>
     <dimen name="online_icon_x_center">9dp</dimen>
     <dimen name="online_icon_y_center">68dp</dimen>
 
-    <dimen name="online_icon_left_padding">5dp</dimen>
-    <dimen name="online_icon_bottom_padding">-26dp</dimen>
+    <dimen name="online_icon_left_padding">2dp</dimen>
+    <dimen name="online_icon_bottom_padding">-20dp</dimen>
+
+    <dimen name="list_view_padding_top">200dp</dimen>
+    <dimen name="list_view_padding_side">20dp</dimen>
 
     <dimen name="shoutout_slide_offset">150dp</dimen>
     <dimen name="inbox_text_padding">45dp</dimen>

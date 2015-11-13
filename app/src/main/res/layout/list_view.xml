@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/list_view_border"
+    >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_marginBottom="@dimen/list_view_padding_side"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="@dimen/list_view_padding_side"
+        android:layout_marginRight="@dimen/list_view_padding_side"
+        android:background="@color/shoutout_green_transparent"
+        >
+    </RelativeLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="@dimen/list_view_padding_side"
+        android:layout_marginRight="@dimen/list_view_padding_side"
+        android:layout_marginTop="@dimen/list_view_padding_top"
+        android:layout_marginBottom="90dp"
+        android:background="@drawable/list_view_bg"
+        android:id="@+id/list_view"
+        >
+
+        <TextView
+            android:id="@+id/numPins"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text=""
+            android:textColor="#FFFFFF"
+            android:textSize="25dp"
+            android:layout_centerHorizontal="true"
+            android:gravity="center_vertical"/>
+
+        <ListView android:id="@+id/pins_list"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:divider="@null"
+            android:dividerHeight="0dp"
+            android:layout_marginTop="@dimen/toolbar_button_height"
+            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            >
+        </ListView>
+    </RelativeLayout>
+</RelativeLayout>

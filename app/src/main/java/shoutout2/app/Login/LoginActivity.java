@@ -10,7 +10,13 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.parse.GetCallback;
 import com.parse.Parse;
+import com.parse.ParseException;
+import com.parse.ParseInstallation;
+import com.parse.ParseObject;
+import com.parse.ParsePush;
+import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
 import shoutout2.app.Keys;
@@ -30,11 +36,6 @@ public class LoginActivity extends FragmentActivity {
 
         new Permissions(this);
 
-        try {
-            Parse.initialize(this, Keys.PARSE_APP_ID, Keys.PARSE_CLIENT_KEY);
-        } catch (Exception e) {
-            Log.d("Parse already init", "assuming user logged out");
-        }
         ParseUser currentUser = ParseUser.getCurrentUser();
         if (currentUser != null) {
             Utils.startMapActivity(this);

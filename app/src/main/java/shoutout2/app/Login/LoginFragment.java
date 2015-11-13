@@ -15,6 +15,7 @@ import android.widget.Toast;
 import com.parse.LogInCallback;
 import com.parse.ParseException;
 import com.parse.ParseUser;
+import com.parse.RequestPasswordResetCallback;
 
 import shoutout2.app.R;
 import shoutout2.app.Utils.Utils;
@@ -29,7 +30,7 @@ public class LoginFragment extends Fragment {
         View v = inflater.inflate(R.layout.login_screen, container, false);
         Button backButton = (Button) v.findViewById(R.id.login_back_button);
         final Button nextButton = (Button) v.findViewById(R.id.login_next_button);
-        Button forgotPasswordButton = (Button) v.findViewById(R.id.forgot_password_button);
+        final Button forgotPasswordButton = (Button) v.findViewById(R.id.forgot_password_button);
         final EditText usernameField = (EditText) v.findViewById(R.id.login_username);
         final EditText passwordField = (EditText) v.findViewById(R.id.login_password);
         nextButton.setOnClickListener(new View.OnClickListener() {
@@ -54,14 +55,24 @@ public class LoginFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 usernameField.setVisibility(View.GONE);
-                passwordField.setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+                forgotPasswordButton.setVisibility(View.GONE);
                 passwordField.setText("");
+                passwordField.setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
                 passwordField.setHint("Email");
                 nextButton.setText("Send");
                 nextButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        ParseUser.requestPasswordResetInBackground(passwordField.getText().toString());
+                        ParseUser.requestPasswordResetInBackground(passwordField.getText().toString(), new RequestPasswordResetCallback() {
+                            @Override
+                            public void done(ParseException e) {
+                                if (e == null) {
+                                    Toast.makeText(getActivity(), "Please check your email for instructions on resetting your password.", Toast.LENGTH_LONG).show();
+                                } else {
+                                    Toast.makeText(getActivity(), "Error resetting password. Please try a different email.", Toast.LENGTH_LONG).show();
+                                }
+                            }
+                        });
                     }
                 });
             }

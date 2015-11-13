@@ -8,18 +8,11 @@
     tools:context=".MyMapActivity">
 
     <com.mapbox.mapboxsdk.views.MapView
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:id="@+id/map"
         mapbox:mapid="melugoyal.cifkje08pdqqpsxm7queakfpr"
         mapbox:accessToken="pk.eyJ1IjoibWVsdWdveWFsIiwiYSI6ImNpZmtqZTFodzE0bmpzM2txY3M4d3YyMTAifQ.uS3VxzgMCV3r5sQD7yv8jQ"/>
-
-    <ImageView
-        android:layout_width="100dp"
-        android:layout_height="148dp"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/shoutout_gray_logo"
-        />
 
     <TextView
         android:layout_width="wrap_content"
@@ -28,6 +21,13 @@
         android:layout_centerHorizontal="true"
         android:text="+"
         android:id="@+id/crosshairs"/>
+
+    <ImageView
+        android:layout_width="100dp"
+        android:layout_height="148dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/shoutout_gray_logo"
+        />
 
     <LinearLayout
         android:id="@+id/toolbar"
@@ -39,11 +39,11 @@
         android:layout_marginRight="10dp">
 
         <ImageButton
-            android:id="@+id/list_view_button"
-            android:layout_width="@dimen/toolbar_button_size"
-            android:layout_height="@dimen/toolbar_button_size"
+            android:id="@+id/settings_button"
+            android:layout_width="@dimen/toolbar_button_width"
+            android:layout_height="@dimen/toolbar_button_height"
             android:layout_gravity="bottom"
-            android:background="@drawable/list_view" />
+            android:background="@drawable/settings" />
 
         <View
             android:layout_width="0dp"
@@ -54,11 +54,12 @@
         <RelativeLayout
             android:id="@+id/message_button_stuff"
             android:layout_width="60dp"
+            android:layout_gravity="bottom"
             android:layout_height="60dp">
 
             <ImageButton
-                android:layout_width="@dimen/toolbar_button_size"
-                android:layout_height="@dimen/toolbar_button_size"
+                android:layout_width="@dimen/toolbar_button_width"
+                android:layout_height="@dimen/toolbar_button_height"
                 android:layout_alignParentBottom="true"
                 android:id="@+id/message_button"
                 android:background="@drawable/message" />
@@ -83,11 +84,19 @@
             android:layout_weight="1" >
         </View>
 
-        <ImageButton
-            android:id="@+id/update_shout_button"
-            android:layout_width="50dp"
-            android:layout_height="60dp"
-            android:background="@drawable/update_shout" />
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="80dp"
+            android:layout_gravity="bottom">
+
+            <ImageButton
+                android:id="@+id/update_shout_button"
+                android:layout_width="50dp"
+                android:layout_height="60dp"
+                android:layout_alignParentBottom="true"
+                android:background="@drawable/update_shout" />
+
+        </RelativeLayout>
 
         <View
             android:layout_width="0dp"
@@ -95,12 +104,32 @@
             android:layout_weight="1" >
         </View>
 
-        <ImageButton
-            android:id="@+id/settings_button"
-            android:layout_width="@dimen/toolbar_button_size"
-            android:layout_height="@dimen/toolbar_button_size"
+        <RelativeLayout
+            android:id="@+id/list_view_button_stuff"
             android:layout_gravity="bottom"
-            android:background="@drawable/settings" />
+            android:layout_width="@dimen/triangle_width"
+            android:layout_height="80dp">
+
+            <ImageButton
+                android:layout_width="@dimen/toolbar_button_width"
+                android:layout_height="@dimen/toolbar_button_height"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:id="@+id/list_view_button"
+                android:background="@drawable/list_view" />
+
+            <ImageView
+                android:layout_width="@dimen/triangle_width"
+                android:layout_height="@dimen/triangle_height"
+                android:layout_centerHorizontal="true"
+                android:id="@+id/list_view_triangle"
+                android:background="@drawable/triangle1"
+                android:layout_toRightOf="@+id/list_view_button"
+                android:layout_marginLeft="-49dp"
+                android:layout_above="@+id/list_view_button"
+                android:layout_marginBottom="2dp"
+                android:visibility="invisible"/>
+        </RelativeLayout>
 
         <View
             android:layout_width="0dp"
@@ -110,8 +139,8 @@
 
         <ImageButton
             android:id="@+id/my_location_button"
-            android:layout_width="@dimen/toolbar_button_size"
-            android:layout_height="@dimen/toolbar_button_size"
+            android:layout_width="@dimen/toolbar_button_width"
+            android:layout_height="@dimen/toolbar_button_height"
             android:layout_gravity="bottom"
             android:background="@drawable/my_location" />
 
