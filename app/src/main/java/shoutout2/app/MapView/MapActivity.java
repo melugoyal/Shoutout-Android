@@ -15,7 +15,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.overlay.Marker;
 import com.parse.CountCallback;
@@ -129,9 +128,19 @@ public class MapActivity extends FragmentActivity {
 
     public void hideUserMarkers(String userId) {
         Marker marker = markers.get(userId);
-        marker.closeToolTip();
-        mapFragment.map.removeMarker(marker);
-        mapFragment.map.invalidate();
+        if (marker != null) {
+            marker.closeToolTip();
+            mapFragment.map.removeMarker(marker);
+            mapFragment.map.invalidate();
+        }
+    }
+
+    public void showUserMarkers(String userId) {
+        Marker marker = markers.get(userId);
+        if (marker != null) {
+            mapFragment.map.addMarker(marker);
+            mapFragment.map.invalidate();
+        }
     }
 
     @Override
@@ -198,13 +207,20 @@ public class MapActivity extends FragmentActivity {
 
     @Override
     public void onBackPressed() {
-        if (getFragmentManager().getBackStackEntryCount() == 1 && mapFragment.listViewFragment != null && mapFragment.listViewFragment.isVisible()) {
+        updateMessageButton();
+        FragmentManager manager = getFragmentManager();
+        int count = manager.getBackStackEntryCount();
+        if (count == 1 && mapFragment.listViewFragment != null && mapFragment.listViewFragment.isVisible()) {
             findViewById(R.id.list_view_triangle).setVisibility(View.INVISIBLE);
         }
-        if (getFragmentManager().getBackStackEntryCount() == 0) {
+        if (count == 0) {
             finish();
         } else {
-            getFragmentManager().popBackStack();
+            manager.popBackStack();
+            if (count == 1 && !ParseUser.getCurrentUser().getBoolean("visible")) { // if we came back to map fragment
+                Log.d("init disabled", "init disabled");
+                mapFragment.initDisabledView();
+            }
         }
     }
 

@@ -52,32 +52,33 @@
         </View>
 
         <RelativeLayout
-            android:id="@+id/message_button_stuff"
-            android:layout_width="60dp"
+            android:id="@+id/list_view_button_stuff"
             android:layout_gravity="bottom"
-            android:layout_height="60dp">
+            android:layout_width="@dimen/triangle_width"
+            android:layout_height="80dp">
 
             <ImageButton
                 android:layout_width="@dimen/toolbar_button_width"
                 android:layout_height="@dimen/toolbar_button_height"
                 android:layout_alignParentBottom="true"
-                android:id="@+id/message_button"
-                android:background="@drawable/message" />
+                android:layout_centerHorizontal="true"
+                android:id="@+id/list_view_button"
+                android:background="@drawable/list_view" />
 
             <ImageView
-                android:layout_width="@dimen/red_circle_size"
-                android:layout_height="@dimen/red_circle_size"
-                android:id="@+id/red_circle"
-                android:background="@drawable/redcircle"
-                android:layout_toRightOf="@+id/message_button"
-                android:layout_marginLeft="-10dp"
-                android:layout_above="@+id/message_button"
-                android:layout_marginBottom="-10dp"
-                android:visibility="visible"/>
-
+                android:layout_width="@dimen/triangle_width"
+                android:layout_height="@dimen/triangle_height"
+                android:layout_centerHorizontal="true"
+                android:id="@+id/list_view_triangle"
+                android:background="@drawable/triangle1"
+                android:layout_toRightOf="@+id/list_view_button"
+                android:layout_marginLeft="-49dp"
+                android:layout_above="@+id/list_view_button"
+                android:layout_marginBottom="2dp"
+                android:visibility="invisible"/>
         </RelativeLayout>
 
-        
+
         <View
             android:layout_width="0dp"
             android:layout_height="fill_parent"
@@ -105,30 +106,29 @@
         </View>
 
         <RelativeLayout
-            android:id="@+id/list_view_button_stuff"
+            android:id="@+id/message_button_stuff"
+            android:layout_width="60dp"
             android:layout_gravity="bottom"
-            android:layout_width="@dimen/triangle_width"
-            android:layout_height="80dp">
+            android:layout_height="60dp">
 
             <ImageButton
                 android:layout_width="@dimen/toolbar_button_width"
                 android:layout_height="@dimen/toolbar_button_height"
                 android:layout_alignParentBottom="true"
-                android:layout_centerHorizontal="true"
-                android:id="@+id/list_view_button"
-                android:background="@drawable/list_view" />
+                android:id="@+id/message_button"
+                android:background="@drawable/message" />
 
             <ImageView
-                android:layout_width="@dimen/triangle_width"
-                android:layout_height="@dimen/triangle_height"
-                android:layout_centerHorizontal="true"
-                android:id="@+id/list_view_triangle"
-                android:background="@drawable/triangle1"
-                android:layout_toRightOf="@+id/list_view_button"
-                android:layout_marginLeft="-49dp"
-                android:layout_above="@+id/list_view_button"
-                android:layout_marginBottom="2dp"
-                android:visibility="invisible"/>
+                android:layout_width="@dimen/red_circle_size"
+                android:layout_height="@dimen/red_circle_size"
+                android:id="@+id/red_circle"
+                android:background="@drawable/redcircle"
+                android:layout_toRightOf="@+id/message_button"
+                android:layout_marginLeft="-10dp"
+                android:layout_above="@+id/message_button"
+                android:layout_marginBottom="-10dp"
+                />
+
         </RelativeLayout>
 
         <View

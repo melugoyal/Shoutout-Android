@@ -68,7 +68,9 @@ public class MessageArrayAdapter<T> extends ArrayAdapter<T> {
             } else {
                 icon = person.icon;
             }
-            imageView.setImageDrawable(new BitmapDrawable(Resources.getSystem(), icon));
+            if (icon != null) {
+                imageView.setImageDrawable(new BitmapDrawable(Resources.getSystem(), icon));
+            }
         } catch (Exception e) {
             Log.e("IMAGE FOR MESSAGE VIEW", messageObject.getObjectId() + " " + username + " " + e.getLocalizedMessage());
         }

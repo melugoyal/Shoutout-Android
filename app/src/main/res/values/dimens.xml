@@ -27,8 +27,12 @@
     <dimen name="info_window_padding_left">45dp</dimen>
     <dimen name="info_window_padding_bottom">50dp</dimen>
 
+    <dimen name="cluster_circle_width">56dp</dimen>
+    <dimen name="cluster_circle_height">67dp</dimen>
+
     <dimen name="toolbar_button_width">41dp</dimen>
     <dimen name="toolbar_button_height">44dp</dimen>
+
     <dimen name="red_circle_size">20dp</dimen>
     <dimen name="triangle_width">57dp</dimen>
     <dimen name="triangle_height">49dp</dimen>

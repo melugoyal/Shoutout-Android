@@ -6,6 +6,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -22,7 +23,7 @@ public class BackgroundLocationService extends Service implements
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
 
-    public static final int UPDATE_INTERVAL = 1000 * 60 * 15;
+    public static final int UPDATE_INTERVAL = 1000 * 60 * 30;
     protected GoogleApiClient mLocationClient;
     public static LocationRequest mLocationRequest;
 
@@ -38,6 +39,7 @@ public class BackgroundLocationService extends Service implements
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationRequest.setInterval(UPDATE_INTERVAL);
         mLocationRequest.setFastestInterval(UPDATE_INTERVAL);
+        mLocationClient.connect();
         return START_STICKY;
     }
 

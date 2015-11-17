@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/map_background"
+    >
+    <TextView
+        android:id="@+id/disabled_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="40dp"
+        android:layout_marginRight="40dp"
+        android:gravity="center_horizontal"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:text="@string/disabled_screen_message"
+        />
+    <Button
+        android:id="@+id/enable_button"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:layout_below="@+id/disabled_text"
+        android:layout_marginTop="20dp"
+        android:layout_centerHorizontal="true"
+        android:text="Enable"
+        android:textSize="20sp"
+        android:textColor="@color/white"
+        android:background="@color/shoutout_blue"
+        />
+
+</RelativeLayout>

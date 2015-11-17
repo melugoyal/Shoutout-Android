@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -43,15 +44,15 @@ public class SettingsFragment extends Fragment{
     public static final String TAG = "settings_fragment";
     private MapActivity mapActivity;
     private ImageView userPic;
+    private ToggleButton mSwitch;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mapActivity = (MapActivity) getActivity();
         final View view = inflater.inflate(R.layout.settings, container, false);
-        ToggleButton mSwitch = (ToggleButton) view.findViewById(R.id.switch1);
+        mSwitch = (ToggleButton) view.findViewById(R.id.switch1);
         mSwitch.setChecked(ParseUser.getCurrentUser().getBoolean("visible"));
-        mSwitch.setVisibility(View.VISIBLE);
         mSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean privacy) {
@@ -61,6 +62,7 @@ public class SettingsFragment extends Fragment{
                 } else {
                     ParseUser.getCurrentUser().put("visible", false);
                 }
+                ParseUser.getCurrentUser().saveInBackground();
             }
         });
 
@@ -121,27 +123,9 @@ public class SettingsFragment extends Fragment{
         feedbackButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder alert = new AlertDialog.Builder(mapActivity);
-
-                alert.setTitle("Feedback");
-
-                final EditText input = new EditText(mapActivity);
-                alert.setView(input);
-
-                alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        ParseObject feedback = new ParseObject("Feedback");
-                        feedback.put("message", input.getText().toString());
-                        feedback.put("author", ParseUser.getCurrentUser());
-                        feedback.saveInBackground();
-                    }
-                });
-
-                alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                    }
-                });
-                alert.show();
+                Uri uri = Uri.parse("http://getshoutout.co/feedback.html");
+                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                startActivity(intent);
             }
         });
 
@@ -149,12 +133,26 @@ public class SettingsFragment extends Fragment{
         logoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mapActivity.finish();
-                ParseUser.logOut();
-                startActivity(new Intent(mapActivity, LoginActivity.class));
+                ParseUser.getCurrentUser().put("online", false);
+                ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
+                    @Override
+                    public void done(ParseException e) {
+                        ParseUser.logOut();
+                        mapActivity.finish();
+                        startActivity(new Intent(mapActivity, LoginActivity.class));
+                    }
+                });
             }
         });
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mSwitch != null) {
+            mSwitch.setChecked(ParseUser.getCurrentUser().getBoolean("visible"));
+        }
     }
 
     @Override

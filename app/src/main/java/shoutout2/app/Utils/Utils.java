@@ -167,8 +167,15 @@ public class Utils {
     }
 
     public static Bitmap getUserIcon(final ParseUser user) {
-        final String urlString = user.getString("picURL");
-        if (urlString != null) {
+        final String urlString;
+        final ParseObject imageObject;
+        try {
+            urlString = user.fetchIfNeeded().getString("picURL");
+            imageObject = user.fetchIfNeeded().getParseObject("profileImage");
+        } catch (Exception e) {
+            return null;
+        }
+        if (imageObject == null && urlString != null) {
             try {
                 URL url = new URL(urlString);
                 Bitmap icon = BitmapFactory.decodeStream(url.openConnection().getInputStream());
@@ -190,9 +197,8 @@ public class Utils {
                 return icon;
             } catch (Exception e) {
             }
-        } else {
+        } else if (imageObject != null) {
             try {
-                ParseObject imageObject = user.fetchIfNeeded().getParseObject("profileImage");
                 byte[] fileData = imageObject.fetchIfNeeded().getParseFile("image").getData();
                 return BitmapFactory.decodeByteArray(fileData, 0, fileData.length);
             } catch (Exception e) {

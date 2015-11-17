@@ -7,5 +7,6 @@
     <string name="title_activity_login">LoginActivity</string>
     <string name="title_activity_my_map">MyMapActivity</string>
     <string name="facebook_app_id">708013719240954</string>
+    <string name="disabled_screen_message">Shoutout relies on users sharing their location. Unless you are sharing your location, we can\'t allow you to see other users\' locations. To continue using the app, please turn on location services in settings.</string>
 
 </resources>

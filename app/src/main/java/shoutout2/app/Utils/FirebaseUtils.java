@@ -127,6 +127,7 @@ public class FirebaseUtils {
                 if (snapshot.child("privacy").getValue().toString().equals("NO")) {
                     mapActivity.hideUserMarkers(userId);
                 } else if (snapshot.child("privacy").getValue().toString().equals("YES")) {
+                    mapActivity.showUserMarkers(userId);
                     mapActivity.makeMarkerActive(userId);
                 }
             }

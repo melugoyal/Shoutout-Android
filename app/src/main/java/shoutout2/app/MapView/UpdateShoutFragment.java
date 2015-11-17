@@ -106,10 +106,11 @@ public class UpdateShoutFragment extends Fragment {
             public void onClick(View v) {
                 String status = mEdit.getText().toString();
                 if (status.length() <= MAX_STATUS_LENGTH) {
-                    currentUser.put("status", status);
-                    FirebaseUtils.updateStatus(status);
-                    currentUser.saveInBackground();
-                    checkStatusForMessage(status);
+                    if (checkStatusForMessage(status)) {
+                        currentUser.put("status", status);
+                        FirebaseUtils.updateStatus(status);
+                        currentUser.saveInBackground();
+                    }
                     cancelShoutButton.callOnClick();
                 }
             }
@@ -119,19 +120,27 @@ public class UpdateShoutFragment extends Fragment {
             return view;
         }
         changeStatusPin.setImageBitmap(person.emptyStatusIcon);
-
         return view;
     }
 
-    protected static void checkStatusForMessage(final String status) {
+    protected static boolean checkStatusForMessage(final String status) {
+        boolean shouldUpdateStatus = true;
+        int index = 0;
         for (String word : status.split("[^a-zA-Z\\d@]")) { // split on all characters except letters, numbers and @
             if (word.startsWith("@")) {
+                if (index == 0) {
+                    shouldUpdateStatus = false;
+                }
                 String username = word.substring(1).toLowerCase();
                 ParseQuery<ParseUser> query = ParseUser.getQuery();
                 query.whereEqualTo("username", username);
+                Log.d("username", username);
                 query.getFirstInBackground(new GetCallback<ParseUser>() {
                     @Override
                     public void done(ParseUser parseUser, ParseException e) {
+                        if (parseUser == null) {
+                            return;
+                        }
                         ParseObject message = new ParseObject("Messages");
                         message.put("from", ParseUser.getCurrentUser());
                         message.put("to", parseUser);
@@ -149,7 +158,8 @@ public class UpdateShoutFragment extends Fragment {
                     }
                 });
             }
+            index++;
         }
+        return shouldUpdateStatus;
     }
-
 }

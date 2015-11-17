@@ -3,20 +3,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/first_screen"
-    android:background="@drawable/map_background"
     tools:context="shoutout2.app.Login.LoginActivity">
     <ImageView
-        android:layout_width="130dp"
-        android:layout_height="130dp"
-        android:layout_marginTop="15dp"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginLeft="-40dp"
         android:id="@+id/logo"
-        android:src="@drawable/shoutout_white_logo"/>
+        android:src="@drawable/nux_logo"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toRightOf="@+id/logo"
-        android:layout_marginTop="45dp"
+        android:layout_marginTop="20dp"
         android:id="@+id/text_field"
         android:textSize="20sp"
         android:singleLine="true"
@@ -26,7 +26,7 @@
     <android.support.v4.view.ViewPager
         android:layout_centerHorizontal="true"
         android:layout_below="@+id/text_field"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="25dp"
         android:layout_above="@+id/signup_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -45,9 +45,9 @@
         android:layout_centerHorizontal="true"
         android:layout_above="@+id/login_button"
         android:id="@+id/signup_button"
-        android:background="#2eceff"
+        android:background="@color/shoutout_blue"
         android:textSize="25dp"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/white"
         android:text="Sign up"/>
 
     <Button
@@ -59,6 +59,6 @@
         android:textSize="20dp"
         android:id="@+id/login_button"
         android:background="#00000000"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/white"
         android:text="Log in"/>
 </RelativeLayout>
